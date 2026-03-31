@@ -1,0 +1,76 @@
+import { cn } from '@/lib/utils';
+import { Check, X } from 'lucide-react';
+import { WORKFLOW_STAGES, getWorkflowStageIndex } from '@/utils/arabicLabels';
+import { type RequestStatus } from '@/types';
+
+interface WorkflowStepperProps {
+  currentStatus: RequestStatus;
+  isRejected?: boolean;
+  className?: string;
+}
+
+export function WorkflowStepper({ currentStatus, isRejected, className }: WorkflowStepperProps) {
+  const currentIdx = getWorkflowStageIndex(currentStatus);
+
+  return (
+    <div className={cn('w-full overflow-x-auto', className)}>
+      <div className="flex min-w-max items-center justify-between gap-0">
+        {WORKFLOW_STAGES.map((stage, idx) => {
+          const isDone = idx < currentIdx;
+          const isCurrent = idx === currentIdx;
+          const isCurrentRejected = isCurrent && isRejected;
+
+          return (
+            <div key={stage.key} className="flex items-center">
+              {/* Step */}
+              <div className="flex flex-col items-center gap-1.5">
+                <div
+                  className={cn(
+                    'flex h-8 w-8 items-center justify-center rounded-full border-2 text-xs font-semibold transition-all',
+                    isDone &&
+                      'border-emerald-500 bg-emerald-500 text-white',
+                    isCurrent && !isCurrentRejected &&
+                      'border-primary bg-primary text-white shadow-md shadow-primary/30',
+                    isCurrentRejected &&
+                      'border-red-500 bg-red-500 text-white',
+                    !isDone && !isCurrent &&
+                      'border-border bg-card text-muted-foreground'
+                  )}
+                >
+                  {isDone ? (
+                    <Check className="h-4 w-4" />
+                  ) : isCurrentRejected ? (
+                    <X className="h-4 w-4" />
+                  ) : (
+                    <span>{idx + 1}</span>
+                  )}
+                </div>
+                <span
+                  className={cn(
+                    'text-xs whitespace-nowrap font-medium',
+                    isDone && 'text-emerald-600',
+                    isCurrent && !isCurrentRejected && 'text-primary',
+                    isCurrentRejected && 'text-red-600',
+                    !isDone && !isCurrent && 'text-muted-foreground'
+                  )}
+                >
+                  {stage.label}
+                </span>
+              </div>
+
+              {/* Connector */}
+              {idx < WORKFLOW_STAGES.length - 1 && (
+                <div
+                  className={cn(
+                    'mx-2 h-0.5 w-12 flex-shrink-0',
+                    idx < currentIdx ? 'bg-emerald-400' : 'bg-border'
+                  )}
+                />
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
