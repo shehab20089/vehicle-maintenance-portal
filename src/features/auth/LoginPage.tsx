@@ -13,11 +13,13 @@ export function LoginPage() {
   const navigate = useNavigate();
 
   const DEMO_ACCOUNTS = [
-    { id: 'EMP-1042', role: 'مسؤول الحركة' },
-    { id: 'EMP-2018', role: 'مدير الشؤون الإدارية' },
-    { id: 'EMP-3055', role: 'مدير النقل والصيانة' },
-    { id: 'EMP-4011', role: 'مدير التوجيه' },
-    { id: 'EMP-5099', role: 'مسؤول الصيانة' },
+    { id: 'EMP-1042', role: 'مسؤول الحركة', name: 'محمد الشهري' },
+    { id: 'EMP-2018', role: 'مدير الشؤون الإدارية', name: 'سلمى العتيبي' },
+    { id: 'EMP-3055', role: 'مدير شعبة النقل والصيانة', name: 'خالد القحطاني' },
+    { id: 'EMP-4011', role: 'مدير الإمداد والصيانة', name: 'عبدالرحمن الدوسري' },
+    { id: 'EMP-5033', role: 'مدير الصيانة', name: 'سعود الحربي' },
+    { id: 'EMP-6099', role: 'مسؤول الصيانة', name: 'فيصل الزهراني' },
+    { id: 'EMP-7077', role: 'مسؤول صيانة مختص', name: 'أحمد الغامدي' },
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -134,8 +136,12 @@ export function LoginPage() {
                 onClick={() => { setEmployeeId(acc.id); setPassword('123456'); }}
                 className="flex items-center justify-between rounded-lg px-3 py-2 text-xs font-medium bg-muted/50 hover:bg-muted text-foreground transition-colors"
               >
-                <span className="text-muted-foreground font-mono">{acc.id}</span>
-                <span>{acc.role}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground font-mono">{acc.id}</span>
+                  <span className="text-muted-foreground">—</span>
+                  <span>{acc.name}</span>
+                </div>
+                <span className="text-primary text-[10px]">{acc.role}</span>
               </button>
             ))}
           </div>

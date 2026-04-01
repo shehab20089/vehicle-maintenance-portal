@@ -9,6 +9,7 @@ const colorClasses = {
   rejected: 'bg-red-50 text-red-700 border border-red-200',
   inprogress: 'bg-blue-50 text-blue-700 border border-blue-200',
   completed: 'bg-green-50 text-green-700 border border-green-200',
+  notified: 'bg-purple-50 text-purple-700 border border-purple-200',
 };
 
 const dotColors = {
@@ -18,6 +19,7 @@ const dotColors = {
   rejected: 'bg-red-400',
   inprogress: 'bg-blue-400',
   completed: 'bg-green-500',
+  notified: 'bg-purple-400',
 };
 
 interface StatusBadgeProps {

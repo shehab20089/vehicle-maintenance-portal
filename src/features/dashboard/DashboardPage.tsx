@@ -9,7 +9,7 @@ import {
   ClipboardList, Plus, Clock, RotateCcw, Wrench, CheckCircle, XCircle, Eye
 } from 'lucide-react';
 import { formatRelativeTime, formatDate } from '@/utils/formatters';
-import { UserRole, RequestStatus } from '@/types';
+import { UserRole } from '@/types';
 import { useState } from 'react';
 
 export function DashboardPage() {

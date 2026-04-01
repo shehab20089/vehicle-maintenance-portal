@@ -1,34 +1,64 @@
 // ==========================================
-// Enums (as const objects for TS5.9 erasableSyntaxOnly)
+// Enums (as const objects for TS erasableSyntaxOnly)
 // ==========================================
 
 export const UserRole = {
+  // 1. مسؤول الحركة — request creator & resubmitter
   TRAFFIC_OFFICER: 'traffic_officer',
+  // 2. مدير الشؤون الإدارية — notification only, no decisions
   ADMIN_DIRECTOR: 'admin_director',
+  // 3. مدير شعبة النقل والصيانة — first & final decision maker
   TRANSPORT_MAINTENANCE_DIRECTOR: 'transport_maintenance_director',
-  ROUTING_DIRECTOR: 'routing_director',
+  // 4. مدير الإمداد والصيانة — new role, second approval stage
+  SUPPLY_MAINTENANCE_DIRECTOR: 'supply_maintenance_director',
+  // 5. مدير الصيانة — routing authority (was routing_director)
+  MAINTENANCE_DIRECTOR: 'maintenance_director',
+  // 6. مسؤول الصيانة — operational executor (primary & specialized are same role, different users)
   MAINTENANCE_OFFICER: 'maintenance_officer',
 } as const;
 export type UserRole = typeof UserRole[keyof typeof UserRole];
 
 export const RequestStatus = {
+  // ── Requester side ──
   DRAFT: 'draft',
   SUBMITTED: 'submitted',
-  UNDER_ADMIN_REVIEW: 'under_admin_review',
-  RETURNED_BY_ADMIN: 'returned_by_admin',
-  REJECTED_BY_ADMIN: 'rejected_by_admin',
-  UNDER_TRANSPORT_MAINTENANCE_REVIEW: 'under_transport_maintenance_review',
-  REJECTED_BY_TRANSPORT_MAINTENANCE: 'rejected_by_transport_maintenance',
-  UNDER_ROUTING_REVIEW: 'under_routing_review',
-  REJECTED_BY_ROUTING: 'rejected_by_routing',
+
+  // ── Notification stage (auto-moves, no decision) ──
+  ADMIN_NOTIFIED: 'admin_notified',
+
+  // ── Stage 1: مدير شعبة النقل والصيانة (initial review) ──
+  UNDER_TRANSPORT_REVIEW: 'under_transport_review',
+  RETURNED_BY_TRANSPORT: 'returned_by_transport',
+  REJECTED_BY_TRANSPORT: 'rejected_by_transport',
+
+  // ── Stage 2: مدير الإمداد والصيانة ──
+  UNDER_SUPPLY_REVIEW: 'under_supply_review',
+  REJECTED_BY_SUPPLY: 'rejected_by_supply',
+
+  // ── Stage 3: مدير الصيانة (routing) ──
+  UNDER_MAINTENANCE_DIRECTOR_REVIEW: 'under_maintenance_director_review',
+  REJECTED_BY_MAINTENANCE_DIRECTOR: 'rejected_by_maintenance_director',
+
+  // ── Stage 4: مسؤول الصيانة (primary execution) ──
   ROUTED_TO_MAINTENANCE: 'routed_to_maintenance',
   RETURNED_BY_MAINTENANCE: 'returned_by_maintenance',
   REJECTED_BY_MAINTENANCE: 'rejected_by_maintenance',
+
+  // ── Stage 4b: مسؤول صيانة آخر مختص (specialized) ──
+  ROUTED_TO_SPECIALIZED: 'routed_to_specialized',
+  RETURNED_BY_SPECIALIZED: 'returned_by_specialized',
+  REJECTED_BY_SPECIALIZED: 'rejected_by_specialized',
+
+  // ── Execution ──
   IN_EXECUTION: 'in_execution',
-  AWAITING_FINAL_DECISION: 'awaiting_final_decision',
-  COMPLETED: 'completed',
-  NEEDS_FOLLOW_UP: 'needs_follow_up',
-  COULD_NOT_COMPLETE: 'could_not_complete',
+  EXECUTION_COMPLETE: 'execution_complete',
+
+  // ── Stage 5: Final review by مدير شعبة النقل والصيانة ──
+  UNDER_FINAL_REVIEW: 'under_final_review',
+  RETURNED_FROM_FINAL: 'returned_from_final',
+
+  // ── Terminal states ──
+  APPROVED_FINAL: 'approved_final',
   CLOSED: 'closed',
 } as const;
 export type RequestStatus = typeof RequestStatus[keyof typeof RequestStatus];
@@ -69,10 +99,21 @@ export const NotificationType = {
   REQUEST_RETURNED: 'request_returned',
   REQUEST_ROUTED: 'request_routed',
   REQUEST_IN_EXECUTION: 'request_in_execution',
-  REQUEST_COMPLETED: 'request_completed',
+  MAINTENANCE_SCHEDULED: 'maintenance_scheduled',
+  SUPPLY_ITEMS_REQUESTED: 'supply_items_requested',
+  MAINTENANCE_REPORT_READY: 'maintenance_report_ready',
+  FINAL_APPROVED: 'final_approved',
   FINAL_RESULT_AVAILABLE: 'final_result_available',
 } as const;
 export type NotificationType = typeof NotificationType[keyof typeof NotificationType];
+
+// ── Flexible maintenance outcome type ──
+export const OutcomeType = {
+  MAINTENANCE_COMPLETED: 'maintenance_completed',     // تمت الصيانة + تقرير نهائي
+  MAINTENANCE_SCHEDULED: 'maintenance_scheduled',     // إشعار بموعد الصيانة
+  SUPPLY_ITEMS_REQUESTED: 'supply_items_requested',   // إشعار بطلب الأصناف
+} as const;
+export type OutcomeType = typeof OutcomeType[keyof typeof OutcomeType];
 
 // ==========================================
 // Domain Types
@@ -131,6 +172,8 @@ export interface Comment {
 
 export interface MaintenanceExecutionDetails {
   assignedOfficer: string;
+  assignedOfficerRole?: UserRole;
+  specializedOfficer?: string;
   startDate?: string;
   estimatedCompletion?: string;
   actualCompletion?: string;
@@ -140,6 +183,8 @@ export interface MaintenanceExecutionDetails {
   evidenceAttachments?: RequestAttachment[];
   actionLogs?: MaintenanceActionLog[];
   checklist?: MaintenanceChecklistItem[];
+  scheduledDate?: string;
+  supplyItemsRequested?: string[];
 }
 
 export interface MaintenanceActionLog {
@@ -160,12 +205,21 @@ export interface MaintenanceChecklistItem {
 export interface FinalDocument {
   id: string;
   title: string;
-  type: 'maintenance_report' | 'maintenance_record' | 'technical_inspection' | 'other';
+  type: 'maintenance_report' | 'final_report' | 'maintenance_record' | 'technical_inspection' | 'supply_request' | 'schedule_notice' | 'other';
   generatedAt: string;
   url: string;
+  linkedOutcomeType?: OutcomeType;
 }
 
-export type FinalDecision = 'completed' | 'needs_follow_up' | 'could_not_complete';
+// ── Flexible maintenance outcome ──
+export interface MaintenanceOutcome {
+  outcomeType: OutcomeType;
+  outcomeLabel: string;
+  reportNotes?: string;
+  scheduledDate?: string;
+  supplyItemsRequested?: string[];
+  documents?: FinalDocument[];
+}
 
 export interface MaintenanceRequest {
   id: string;
@@ -192,10 +246,15 @@ export interface MaintenanceRequest {
   comments: Comment[];
   timeline: TimelineEntry[];
   maintenanceExecution?: MaintenanceExecutionDetails;
-  finalDecision?: FinalDecision;
+  // Flexible outcome model (replaces old FinalDecision enum)
+  maintenanceOutcome?: MaintenanceOutcome;
   finalNotes?: string;
   finalDocuments: FinalDocument[];
   notes?: string;
+  // ── Return-to-same-role tracking ──
+  // When a role returns the request, we record where to send it back after resubmission
+  pendingReturnToRole?: UserRole;
+  pendingReturnToUserId?: string;
 }
 
 export interface Notification {
@@ -217,4 +276,8 @@ export interface WorkflowTransition {
   allowedRoles: UserRole[];
   requiresNotes: boolean;
   requiresReason: boolean;
+  // If true, this transition triggers a return-to-requester then back to same role
+  isReturn?: boolean;
+  // If true, this auto-transition happens without user action
+  isAuto?: boolean;
 }

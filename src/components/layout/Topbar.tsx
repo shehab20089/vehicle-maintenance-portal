@@ -12,7 +12,8 @@ const roleColors: Record<UserRole, string> = {
   traffic_officer: 'bg-blue-500',
   admin_director: 'bg-purple-500',
   transport_maintenance_director: 'bg-orange-500',
-  routing_director: 'bg-teal-500',
+  supply_maintenance_director: 'bg-cyan-500',
+  maintenance_director: 'bg-teal-500',
   maintenance_officer: 'bg-green-500',
 };
 

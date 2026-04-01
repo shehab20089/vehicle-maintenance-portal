@@ -9,6 +9,7 @@ interface AuthState {
   login: (employeeId: string, password: string) => boolean;
   logout: () => void;
   switchRole: (role: UserRole) => void;
+  switchToUser: (userId: string) => void;
   getAllUsers: () => User[];
 }
 
@@ -32,6 +33,11 @@ export const useAuthStore = create<AuthState>()(
       switchRole: (role: UserRole) => {
         const user = MOCK_USERS.find((u) => u.role === role);
         if (user) set({ currentUser: user });
+      },
+
+      switchToUser: (userId: string) => {
+        const user = MOCK_USERS.find((u) => u.id === userId);
+        if (user) set({ currentUser: user, isAuthenticated: true });
       },
 
       getAllUsers: () => MOCK_USERS,

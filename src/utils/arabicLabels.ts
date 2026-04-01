@@ -5,7 +5,7 @@ import {
   type UserRole,
   type VehicleCondition,
   type NotificationType,
-  type FinalDecision,
+  type OutcomeType,
 } from '@/types';
 
 // ==========================================
@@ -15,21 +15,25 @@ import {
 export const STATUS_LABELS: Record<RequestStatus, string> = {
   draft: 'مسودة',
   submitted: 'تم التقديم',
-  under_admin_review: 'تحت مراجعة الشؤون الإدارية',
-  returned_by_admin: 'معاد من الشؤون الإدارية',
-  rejected_by_admin: 'مرفوض من الشؤون الإدارية',
-  under_transport_maintenance_review: 'تحت مراجعة النقل والصيانة',
-  rejected_by_transport_maintenance: 'مرفوض من النقل والصيانة',
-  under_routing_review: 'تحت مراجعة التوجيه',
-  rejected_by_routing: 'مرفوض من التوجيه',
+  admin_notified: 'تم إشعار الشؤون الإدارية',
+  under_transport_review: 'تحت مراجعة النقل والصيانة',
+  returned_by_transport: 'معاد من النقل والصيانة',
+  rejected_by_transport: 'مرفوض من النقل والصيانة',
+  under_supply_review: 'تحت مراجعة الإمداد والصيانة',
+  rejected_by_supply: 'مرفوض من الإمداد والصيانة',
+  under_maintenance_director_review: 'تحت مراجعة مدير الصيانة',
+  rejected_by_maintenance_director: 'مرفوض من مدير الصيانة',
   routed_to_maintenance: 'محول لمسؤول الصيانة',
-  returned_by_maintenance: 'معاد من الصيانة',
-  rejected_by_maintenance: 'مرفوض من الصيانة',
+  returned_by_maintenance: 'معاد من مسؤول الصيانة',
+  rejected_by_maintenance: 'مرفوض من مسؤول الصيانة',
+  routed_to_specialized: 'محول لمسؤول صيانة مختص',
+  returned_by_specialized: 'معاد من مسؤول الصيانة المختص',
+  rejected_by_specialized: 'مرفوض من مسؤول الصيانة المختص',
   in_execution: 'تحت التنفيذ',
-  awaiting_final_decision: 'بانتظار القرار النهائي',
-  completed: 'مكتمل',
-  needs_follow_up: 'يحتاج متابعة',
-  could_not_complete: 'تعذر الإكمال',
+  execution_complete: 'اكتمل التنفيذ',
+  under_final_review: 'تحت المراجعة النهائية',
+  returned_from_final: 'معاد من المراجعة النهائية',
+  approved_final: 'تم الاعتماد النهائي',
   closed: 'مغلق',
 };
 
@@ -57,7 +61,8 @@ export const ROLE_LABELS: Record<UserRole, string> = {
   traffic_officer: 'مسؤول الحركة',
   admin_director: 'مدير الشؤون الإدارية',
   transport_maintenance_director: 'مدير شعبة النقل والصيانة',
-  routing_director: 'مدير الإدارة والنقل والورش',
+  supply_maintenance_director: 'مدير الإمداد والصيانة',
+  maintenance_director: 'مدير الصيانة',
   maintenance_officer: 'مسؤول الصيانة',
 };
 
@@ -74,48 +79,60 @@ export const NOTIFICATION_TYPE_LABELS: Record<NotificationType, string> = {
   request_returned: 'تمت الإعادة',
   request_routed: 'تم التحويل',
   request_in_execution: 'تحت التنفيذ',
-  request_completed: 'مكتمل',
+  maintenance_scheduled: 'إشعار بموعد الصيانة',
+  supply_items_requested: 'إشعار بطلب الأصناف',
+  maintenance_report_ready: 'تقرير الصيانة جاهز',
+  final_approved: 'تم الاعتماد النهائي',
   final_result_available: 'النتيجة النهائية متاحة',
 };
 
-export const FINAL_DECISION_LABELS: Record<FinalDecision, string> = {
-  completed: 'مكتمل',
-  needs_follow_up: 'يحتاج متابعة',
-  could_not_complete: 'تعذر الإكمال',
+export const OUTCOME_TYPE_LABELS: Record<OutcomeType, string> = {
+  maintenance_completed: 'تمت الصيانة + التقرير النهائي',
+  maintenance_scheduled: 'إشعار بموعد الصيانة',
+  supply_items_requested: 'إشعار بطلب الأصناف',
 };
 
-// Status color mapping for styling
-export type StatusColorType = 'pending' | 'approved' | 'returned' | 'rejected' | 'inprogress' | 'completed';
+// ==========================================
+// Status color mapping for badge styling
+// ==========================================
+export type StatusColorType = 'pending' | 'approved' | 'returned' | 'rejected' | 'inprogress' | 'completed' | 'notified';
 
 export const STATUS_COLOR_MAP: Record<RequestStatus, StatusColorType> = {
   draft: 'pending',
   submitted: 'pending',
-  under_admin_review: 'pending',
-  returned_by_admin: 'returned',
-  rejected_by_admin: 'rejected',
-  under_transport_maintenance_review: 'pending',
-  rejected_by_transport_maintenance: 'rejected',
-  under_routing_review: 'pending',
-  rejected_by_routing: 'rejected',
+  admin_notified: 'notified',
+  under_transport_review: 'pending',
+  returned_by_transport: 'returned',
+  rejected_by_transport: 'rejected',
+  under_supply_review: 'pending',
+  rejected_by_supply: 'rejected',
+  under_maintenance_director_review: 'pending',
+  rejected_by_maintenance_director: 'rejected',
   routed_to_maintenance: 'inprogress',
   returned_by_maintenance: 'returned',
   rejected_by_maintenance: 'rejected',
+  routed_to_specialized: 'inprogress',
+  returned_by_specialized: 'returned',
+  rejected_by_specialized: 'rejected',
   in_execution: 'inprogress',
-  awaiting_final_decision: 'inprogress',
-  completed: 'completed',
-  needs_follow_up: 'returned',
-  could_not_complete: 'rejected',
+  execution_complete: 'inprogress',
+  under_final_review: 'pending',
+  returned_from_final: 'returned',
+  approved_final: 'approved',
   closed: 'completed',
 };
 
-// Workflow stages for stepper
+// ==========================================
+// Workflow stages for stepper (9 stages)
+// ==========================================
 export const WORKFLOW_STAGES = [
-  { key: 'submitted', label: 'تقديم الطلب' },
-  { key: 'admin_review', label: 'مراجعة الشؤون الإدارية' },
+  { key: 'submitted', label: 'التقديم' },
+  { key: 'admin_notified', label: 'إشعار الشؤون الإدارية' },
   { key: 'transport_review', label: 'مراجعة النقل والصيانة' },
-  { key: 'routing', label: 'التوجيه' },
-  { key: 'maintenance', label: 'التنفيذ' },
-  { key: 'final_decision', label: 'القرار النهائي' },
+  { key: 'supply_review', label: 'مراجعة الإمداد والصيانة' },
+  { key: 'maintenance_director', label: 'توجيه الصيانة' },
+  { key: 'execution', label: 'التنفيذ' },
+  { key: 'final_review', label: 'المراجعة النهائية' },
   { key: 'closed', label: 'الإغلاق' },
 ] as const;
 
@@ -124,29 +141,59 @@ export function getWorkflowStageIndex(status: RequestStatus): number {
     case 'draft':
     case 'submitted':
       return 0;
-    case 'under_admin_review':
-    case 'returned_by_admin':
-    case 'rejected_by_admin':
+    case 'admin_notified':
       return 1;
-    case 'under_transport_maintenance_review':
-    case 'rejected_by_transport_maintenance':
+    case 'under_transport_review':
+    case 'returned_by_transport':
+    case 'rejected_by_transport':
       return 2;
-    case 'under_routing_review':
-    case 'rejected_by_routing':
+    case 'under_supply_review':
+    case 'rejected_by_supply':
       return 3;
+    case 'under_maintenance_director_review':
+    case 'rejected_by_maintenance_director':
     case 'routed_to_maintenance':
     case 'returned_by_maintenance':
     case 'rejected_by_maintenance':
-    case 'in_execution':
+    case 'routed_to_specialized':
+    case 'returned_by_specialized':
+    case 'rejected_by_specialized':
       return 4;
-    case 'awaiting_final_decision':
-    case 'completed':
-    case 'needs_follow_up':
-    case 'could_not_complete':
+    case 'in_execution':
+    case 'execution_complete':
       return 5;
-    case 'closed':
+    case 'under_final_review':
+    case 'returned_from_final':
+    case 'approved_final':
       return 6;
+    case 'closed':
+      return 7;
     default:
       return 0;
   }
+}
+
+/**
+ * Returns true for statuses that represent a terminal rejection.
+ */
+export function isRejectedStatus(status: RequestStatus): boolean {
+  return [
+    'rejected_by_transport',
+    'rejected_by_supply',
+    'rejected_by_maintenance_director',
+    'rejected_by_maintenance',
+    'rejected_by_specialized',
+  ].includes(status);
+}
+
+/**
+ * Returns true for statuses where the request is waiting on مسؤول الحركة to resubmit.
+ */
+export function isReturnedStatus(status: RequestStatus): boolean {
+  return [
+    'returned_by_transport',
+    'returned_by_maintenance',
+    'returned_by_specialized',
+    'returned_from_final',
+  ].includes(status);
 }
