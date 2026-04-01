@@ -8,6 +8,9 @@ import { Timeline } from '@/components/shared/Timeline';
 import { WorkflowStepper } from '@/components/shared/WorkflowStepper';
 import { ConfirmationModal } from '@/components/shared/ConfirmationModal';
 import { PageHeader } from '@/components/shared/PageHeader';
+import { CamundaFormRenderer } from '@/components/shared/CamundaFormRenderer';
+import { OfficialCamundaFormViewer } from '@/components/shared/OfficialCamundaFormViewer';
+import type { CamundaFormSchema } from '@/types/camunda';
 import { UserRole, RequestStatus } from '@/types';
 import { getAllowedTransitions } from '@/utils/workflow';
 import { ROLE_LABELS, ISSUE_CATEGORY_LABELS, VEHICLE_CONDITION_LABELS } from '@/utils/arabicLabels';
@@ -62,6 +65,57 @@ const ACTION_STYLES: Record<string, string> = {
 
 type ActiveTab = 'details' | 'timeline' | 'comments' | 'documents';
 
+const sampleCamundaSchema: CamundaFormSchema & { type: string } = {
+  "executionPlatform": "Camunda Cloud",
+  "executionPlatformVersion": "8.7.0",
+  "exporter": {
+    "name": "Camunda Web Modeler",
+    "version": "a0293e6"
+  },
+  "schemaVersion": 18,
+  "id": "Form_0nog1ps",
+  "components": [
+    {
+      "label": "Reason",
+      "type": "textarea",
+      "layout": {
+        "row": "Row_06nmr5f",
+        "columns": null
+      },
+      "id": "Field_0aawab9",
+      "key": "textarea_dm5l4",
+      "validate": {
+        "required": true,
+        "minLength": 20,
+        "maxLength": 500
+      },
+      "properties": {
+        "labelEn": "Reason",
+        "labelAr": "السبب"
+      }
+    },
+    {
+      "label": "Upload File",
+      "type": "filepicker",
+      "layout": {
+        "row": "Row_1ovdgab",
+        "columns": null
+      },
+      "id": "Field_0ui9ubd",
+      "key": "filepicker_szirtj",
+      "accept": ".png, .jpg, .jpeg, .pdf, .doc, .docx",
+      "validate": {
+        "required": true
+      },
+      "properties": {
+        "labelEn": "Upload Document",
+        "labelAr": "تحميل المستند"
+      }
+    }
+  ],
+  "type": "default"
+};
+
 export function RequestDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -69,6 +123,7 @@ export function RequestDetailsPage() {
   const { currentUser } = useAuthStore();
 
   const [activeTab, setActiveTab] = useState<ActiveTab>('details');
+  const [useOfficialForm, setUseOfficialForm] = useState(true);
   const [confirmAction, setConfirmAction] = useState<string | null>(null);
   const [actionNotes, setActionNotes] = useState('');
   const [officerName, setOfficerName] = useState('فيصل بن علي الزهراني');
@@ -178,6 +233,36 @@ export function RequestDetailsPage() {
           {/* Details Tab */}
           {activeTab === 'details' && (
             <div className="space-y-4">
+              {/* Form Toggle */}
+              <div className="flex justify-end p-2 mb-2 bg-muted/50 rounded-lg">
+                <label className="flex items-center cursor-pointer gap-2">
+                  <span className="text-sm text-muted-foreground mr-2">استخدام النموذج الرسمي (form-js)</span>
+                  <div className="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+                    <input type="checkbox" name="toggle" id="toggle" checked={useOfficialForm} onChange={(e) => setUseOfficialForm(e.target.checked)} className="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer border-muted-foreground transition-transform checked:transform checked:translate-x-full checked:border-primary" style={{transform: useOfficialForm ? 'translateX(-100%)' : 'translateX(0)'}} />
+                    <label htmlFor="toggle" className={`toggle-label block overflow-hidden h-5 rounded-full bg-muted-foreground cursor-pointer ${useOfficialForm ? 'bg-primary' : ''}`}></label>
+                  </div>
+                </label>
+              </div>
+
+              {/* Dynamic Task Form (Camunda Integration) */}
+              {useOfficialForm ? (
+                <OfficialCamundaFormViewer
+                  schema={sampleCamundaSchema}
+                  onSubmit={(data) => {
+                    console.log("Official form submitted:", data);
+                    alert("تم حفظ النموذج الرسمي بنجاح!");
+                  }}
+                />
+              ) : (
+                <CamundaFormRenderer
+                  schema={sampleCamundaSchema}
+                  onSubmit={(data) => {
+                    console.log("Camunda Form Submitted:", data);
+                    alert("تم حفظ النموذج المخصص بنجاح!");
+                  }}
+                />
+              )}
+
               {/* Meta info */}
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                 {[
