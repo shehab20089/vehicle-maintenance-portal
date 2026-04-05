@@ -1,0 +1,63 @@
+{
+  "regions": [
+    { "label": "الرياض", "value": "riyadh" },
+    { "label": "جدة", "value": "jeddah" },
+    { "label": "الدمام", "value": "dammam" },
+    { "label": "مكة المكرمة", "value": "makkah" },
+    { "label": "المدينة المنورة", "value": "madinah" }
+  ],
+  "servicesTypes": [
+    { "label": "صيانة دورية", "value": "periodic_maintenance" },
+    { "label": "صيانة طارئة", "value": "emergency_maintenance" },
+    { "label": "غسيل", "value": "washing" },
+    { "label": "تغيير زيت", "value": "oil_change" },
+    { "label": "تغيير بطارية", "value": "battery_change" },
+    { "label": "تغيير كفرات", "value": "tire_change" },
+    { "label": "فحص", "value": "inspection" },
+    { "label": "test", "value": "test" },
+    { "label": "أخرى", "value": "other" }
+  ],
+  "requestedServices": [
+    { "label": "صيانة دورية", "value": "periodic_maintenance" },
+    { "label": "صيانة طارئة", "value": "emergency_maintenance" },
+    { "label": "غسيل", "value": "washing" },
+    { "label": "تغيير زيت", "value": "oil_change" },
+    { "label": "تغيير بطارية", "value": "battery_change" },
+    { "label": "تغيير كفرات", "value": "tire_change" },
+    { "label": "فحص", "value": "inspection" },
+    { "label": "أخرى", "value": "other" }
+  ],
+  "issueCategories": [
+    { "label": "محرك", "value": "engine" },
+    { "label": "فرامل", "value": "brakes" },
+    { "label": "كهرباء", "value": "electrical" },
+    { "label": "إطارات", "value": "tires" },
+    { "label": "تكييف", "value": "ac" },
+    { "label": "هيكل", "value": "body" },
+    { "label": "تعليق", "value": "suspension" },
+    { "label": "ناقل حركة", "value": "transmission" },
+    { "label": "تغيير زيت", "value": "oil_change" },
+    { "label": "عام", "value": "general" }
+  ],
+  "priorities": [
+    { "label": "عاجل", "value": "urgent" },
+    { "label": "مرتفع", "value": "high" },
+    { "label": "متوسط", "value": "medium" },
+    { "label": "منخفض", "value": "low" }
+  ],
+  "maintenanceOfficers": [
+    { "id": "u6", "name": "فيصل بن علي الزهراني", "value": "u6" },
+    { "id": "u7", "name": "أحمد بن سعد الغامدي", "value": "u7" }
+  ],
+  "assignableEmployees": [
+    { "label": "فيصل بن علي الزهراني", "value": "u6" },
+    { "label": "أحمد بن سعد الغامدي", "value": "u7" }
+  ],
+  "assignableRoles": [
+    { "label": "مسؤول الحركة", "value": "traffic_officer" },
+    { "label": "مدير شعبة النقل والصيانة", "value": "transport_maintenance_director" },
+    { "label": "مدير الإمداد والصيانة", "value": "supply_maintenance_director" },
+    { "label": "مدير الصيانة", "value": "maintenance_director" },
+    { "label": "مسؤول الصيانة", "value": "maintenance_officer" }
+  ]
+}

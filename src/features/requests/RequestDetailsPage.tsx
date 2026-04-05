@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useRequestStore } from '@/store/requestStore';
 import { useAuthStore } from '@/store/authStore';
@@ -8,71 +8,153 @@ import { Timeline } from '@/components/shared/Timeline';
 import { WorkflowStepper } from '@/components/shared/WorkflowStepper';
 import { ConfirmationModal } from '@/components/shared/ConfirmationModal';
 import { PageHeader } from '@/components/shared/PageHeader';
-import { UserRole, RequestStatus, type MaintenanceOutcome, OutcomeType } from '@/types';
+import { requestApi } from '@/lib/api';
+import { useLookups } from '@/lib/useLookups';
+import { UserRole, type MaintenanceOutcome, type MaintenanceRequest, type RequestWorkflowContext, OutcomeType } from '@/types';
 import { getAllowedTransitions } from '@/utils/workflow';
-import { ROLE_LABELS, ISSUE_CATEGORY_LABELS, VEHICLE_CONDITION_LABELS, OUTCOME_TYPE_LABELS, isRejectedStatus } from '@/utils/arabicLabels';
+import { ROLE_LABELS, ISSUE_CATEGORY_LABELS, VEHICLE_CONDITION_LABELS, OUTCOME_TYPE_LABELS } from '@/utils/arabicLabels';
 import { formatDate, formatDateTime } from '@/utils/formatters';
-import { getUsersByRole } from '@/data/mockUsers';
 import { cn } from '@/lib/utils';
 import {
-  Car, User, Wrench, FileText, MessageSquare, Send, CheckCircle, XCircle,
-  RotateCcw, Play, Flag, ArrowRightLeft, AlertCircle, Paperclip, ChevronLeft,
+  Car, User, Wrench, FileText, MessageSquare, Send, CheckCircle,
+  RotateCcw, AlertCircle, Paperclip,
   Bell, Star, Package, Calendar,
 } from 'lucide-react';
+import { CamundaFormRenderer } from '@/components/shared/CamundaFormRenderer';
 
-const ACTION_ICONS: Record<string, React.ElementType> = {
-  transport_approve: CheckCircle,
-  transport_reject: XCircle,
-  transport_return: RotateCcw,
-  supply_approve: CheckCircle,
-  supply_reject: XCircle,
-  route_to_maintenance: ArrowRightLeft,
-  maintenance_director_reject: XCircle,
-  start_execution: Play,
-  maintenance_reject: XCircle,
-  maintenance_return: RotateCcw,
-  route_to_specialized: ArrowRightLeft,
-  specialized_execute: Play,
-  specialized_reject: XCircle,
-  specialized_return: RotateCcw,
-  complete_execution: Flag,
-  final_approve: Star,
-  final_return: RotateCcw,
-  submit: Send,
-  resubmit: Send,
-  close: CheckCircle,
-};
+function getLookupLabel(
+  value: string | undefined,
+  ...groups: Array<Array<{ label: string; value: string }> | undefined>
+) {
+  if (!value) {
+    return '';
+  }
 
-const ACTION_STYLES: Record<string, string> = {
-  transport_approve: 'bg-emerald-600 hover:bg-emerald-700 text-white',
-  supply_approve: 'bg-emerald-600 hover:bg-emerald-700 text-white',
-  route_to_maintenance: 'bg-blue-600 hover:bg-blue-700 text-white',
-  start_execution: 'bg-indigo-600 hover:bg-indigo-700 text-white',
-  specialized_execute: 'bg-indigo-600 hover:bg-indigo-700 text-white',
-  route_to_specialized: 'bg-violet-600 hover:bg-violet-700 text-white',
-  complete_execution: 'bg-teal-600 hover:bg-teal-700 text-white',
-  final_approve: 'bg-amber-600 hover:bg-amber-700 text-white',
-  submit: 'bg-primary hover:bg-primary/90 text-white',
-  resubmit: 'bg-primary hover:bg-primary/90 text-white',
-  close: 'bg-slate-600 hover:bg-slate-700 text-white',
-  transport_return: 'bg-orange-500 hover:bg-orange-600 text-white',
-  maintenance_return: 'bg-orange-500 hover:bg-orange-600 text-white',
-  specialized_return: 'bg-orange-500 hover:bg-orange-600 text-white',
-  final_return: 'bg-orange-500 hover:bg-orange-600 text-white',
-  transport_reject: 'bg-red-600 hover:bg-red-700 text-white',
-  supply_reject: 'bg-red-600 hover:bg-red-700 text-white',
-  maintenance_director_reject: 'bg-red-600 hover:bg-red-700 text-white',
-  maintenance_reject: 'bg-red-600 hover:bg-red-700 text-white',
-  specialized_reject: 'bg-red-600 hover:bg-red-700 text-white',
-};
+  for (const group of groups) {
+    const match = group?.find((item) => item.value === value);
+    if (match) {
+      return match.label;
+    }
+  }
+
+  return value;
+}
+
+function buildWorkflowDefaultValues(request: MaintenanceRequest, formId?: string) {
+  const values = {
+    requestId: request.id,
+    requestNumber: request.requestNumber,
+    requesterName: request.requester.name,
+    employeeId: request.requester.employeeId,
+    department: request.requester.department,
+    phone: request.requester.phone ?? '',
+    mobileNumber: request.mobileNumber ?? request.requester.phone ?? '',
+    vehicleNumber: request.vehicle.vehicleNumber,
+    plateNumber: request.vehicle.plateNumber,
+    vehiclePlate: request.vehiclePlate ?? request.vehicle.plateNumber,
+    vehicleType: request.vehicle.vehicleType,
+    vehicleCategory: request.vehicleCategory ?? request.vehicle.vehicleType,
+    make: request.vehicle.make,
+    vehicleName: request.vehicleName ?? request.vehicle.make,
+    model: request.vehicle.model,
+    vehicleModel: request.vehicleModel ?? request.vehicle.model,
+    year: request.vehicle.year,
+    vehicleYear: request.vehicleYear ?? request.vehicle.year,
+    color: request.vehicle.color,
+    currentCondition: request.vehicle.currentCondition,
+    issueCategory: request.issueCategory,
+    issueDescription: request.issueDescription,
+    priority: request.priority,
+    notes: request.notes ?? '',
+    requestedService: request.requestedService ?? '',
+    region: request.region ?? '',
+    batterySize: request.batterySize ?? '',
+    tireSize: request.tireSize ?? '',
+    tireCount: request.tireCount ?? '',
+    otherServiceDescription: request.otherServiceDescription ?? '',
+    requestStatus: request.requestStatus ?? request.currentStage,
+    rejectionReason: request.rejectionReason ?? '',
+    returnReason: request.returnReason ?? '',
+    finalReturnReason: request.finalReturnReason ?? '',
+    assignedOfficer: request.maintenanceExecution?.assignedOfficer ?? '',
+    reassignTarget: request.maintenanceExecution?.specializedOfficer ?? '',
+    vehicleEntryDate: request.vehicleEntryDate ?? '',
+    maintenanceAppointmentDate: request.maintenanceAppointmentDate ?? '',
+    faultDescription: request.faultDescription ?? '',
+    requiredItem: request.requiredItem ?? '',
+    itemQuantity: request.itemQuantity ?? '',
+    itemRequestReceivedDate: request.itemRequestReceivedDate ?? '',
+    itemsReceivedDate: request.itemsReceivedDate ?? '',
+    warehouseKeeper: request.warehouseKeeper ?? '',
+    warehouseSectionManager: request.warehouseSectionManager ?? '',
+    orderNumber: request.orderNumber ?? '',
+    vehicleReceiptDate: request.vehicleReceiptDate ?? '',
+    vehicleReceiverName: request.vehicleReceiverName ?? '',
+    washingDone: request.washingDone ?? false,
+    batteryChanged: request.batteryChanged ?? false,
+    oilChanged: request.oilChanged ?? false,
+    tiresChanged: request.tiresChanged ?? false,
+    tiresChangedCount: request.tiresChangedCount ?? '',
+    otherActionDone: request.otherActionDone ?? false,
+    otherActionDescription: request.otherActionDescription ?? '',
+    maintenanceOutcome: request.maintenanceOutcome?.outcomeType === OutcomeType.MAINTENANCE_SCHEDULED
+      ? 'notify_appointment'
+      : request.maintenanceOutcome?.outcomeType === OutcomeType.SUPPLY_ITEMS_REQUESTED
+        ? 'notify_spare_parts'
+        : 'completed_with_report',
+    scheduledDate: request.maintenanceOutcome?.scheduledDate ?? request.maintenanceExecution?.scheduledDate ?? '',
+    supplyItemsRequested: request.maintenanceOutcome?.supplyItemsRequested ?? request.maintenanceExecution?.supplyItemsRequested ?? [],
+    reportNotes: request.maintenanceOutcome?.reportNotes ?? '',
+  };
+
+  const transientFieldsByForm: Record<string, string[]> = {
+    form_initial_review: ['action', 'notes', 'rejectionReason', 'returnReason'],
+    form_supply_maint_review: ['action', 'notes', 'rejectionReason'],
+    form_maintenance_mgr_review: ['action', 'assignedOfficer', 'rejectionReason'],
+    form_maintenance_processing: [
+      'action',
+      'notes',
+      'rejectionReason',
+      'reassignTarget',
+      'vehicleEntryDate',
+      'maintenanceAppointmentDate',
+      'faultDescription',
+      'requiredItem',
+      'itemQuantity',
+      'itemRequestReceivedDate',
+      'itemsReceivedDate',
+      'warehouseKeeper',
+      'warehouseSectionManager',
+      'orderNumber',
+      'vehicleReceiptDate',
+      'vehicleReceiverName',
+      'washingDone',
+      'batteryChanged',
+      'oilChanged',
+      'tiresChanged',
+      'tiresChangedCount',
+      'otherActionDone',
+      'otherActionDescription',
+    ],
+    form_maintenance_outcome: ['maintenanceOutcome', 'notes'],
+    form_final_approval: ['action', 'notes', 'finalReturnReason'],
+  };
+
+  for (const key of transientFieldsByForm[formId ?? ''] ?? []) {
+    values[key as keyof typeof values] = key.includes('Done') ? false as never : '' as never;
+  }
+
+  return values;
+}
 
 type ActiveTab = 'details' | 'timeline' | 'comments' | 'documents';
 
 export function RequestDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { getRequestById, performAction, addComment } = useRequestStore();
-  const { currentUser } = useAuthStore();
+  const { getRequestById, performAction, addComment, loadRequests, isLoading, error: requestError } = useRequestStore();
+  const { currentUser, users } = useAuthStore();
+  const { lookups } = useLookups();
 
   const [activeTab, setActiveTab] = useState<ActiveTab>('details');
   const [confirmAction, setConfirmAction] = useState<string | null>(null);
@@ -81,13 +163,69 @@ export function RequestDetailsPage() {
   const [specializedOfficerName, setSpecializedOfficerName] = useState('');
   const [commentText, setCommentText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  // Final outcome selection
+  const [actionError, setActionError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+  const [executionAttachment, setExecutionAttachment] = useState<File | null>(null);
+  const [workflowContext, setWorkflowContext] = useState<RequestWorkflowContext | null>(null);
+  const [workflowError, setWorkflowError] = useState('');
+  const [isWorkflowLoading, setIsWorkflowLoading] = useState(false);
+  const [isWorkflowSubmitting, setIsWorkflowSubmitting] = useState(false);
   const [selectedOutcome, setSelectedOutcome] = useState<MaintenanceOutcome>({
     outcomeType: OutcomeType.MAINTENANCE_COMPLETED,
     outcomeLabel: OUTCOME_TYPE_LABELS[OutcomeType.MAINTENANCE_COMPLETED],
   });
 
   const request = id ? getRequestById(id) : undefined;
+  const requestId = request?.id;
+  const requestUpdatedAt = request?.updatedAt;
+  const requestedServiceLabel = getLookupLabel(request?.requestedService, lookups.servicesTypes, lookups.requestedServices);
+  const regionLabel = getLookupLabel(request?.region, lookups.regions);
+  const returnReasonText = request?.status === 'returned_from_final'
+    ? request.finalReturnReason || request.returnReason || ''
+    : request?.returnReason || request?.finalReturnReason || '';
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadWorkflowContext() {
+      if (!requestId || !currentUser) {
+        if (!cancelled) {
+          setWorkflowContext(null);
+          setWorkflowError('');
+        }
+        return;
+      }
+
+      setIsWorkflowLoading(true);
+
+      try {
+        const context = await requestApi.getWorkflowContext(requestId, currentUser.role);
+        if (!cancelled) {
+          setWorkflowContext(context);
+          setWorkflowError('');
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setWorkflowContext(null);
+          setWorkflowError(error instanceof Error ? error.message : 'تعذر تحميل نموذج Camunda الحالي.');
+        }
+      } finally {
+        if (!cancelled) {
+          setIsWorkflowLoading(false);
+        }
+      }
+    }
+
+    void loadWorkflowContext();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentUser, requestId, requestUpdatedAt]);
+
+  if (!request && isLoading) {
+    return <div className="py-24 text-center text-sm text-muted-foreground">جاري تحميل بيانات الطلب...</div>;
+  }
 
   if (!request) {
     return (
@@ -100,11 +238,17 @@ export function RequestDetailsPage() {
   }
 
   const isAdminDirector = currentUser?.role === UserRole.ADMIN_DIRECTOR;
-  const rejectedStatus = isRejectedStatus(request.status);
   const allowedTransitions = currentUser ? getAllowedTransitions(request.status, currentUser.role) : [];
+  const hasInteractiveWorkflowForm = Boolean(
+    workflowContext?.enabled
+    && workflowContext.form
+    && currentUser
+    && workflowContext.task?.role === currentUser.role
+  );
+  const showLegacyActions = !hasInteractiveWorkflowForm;
 
   // Officers for routing dropdowns — both primary & specialized share the MAINTENANCE_OFFICER role
-  const allMaintenanceOfficers = getUsersByRole(UserRole.MAINTENANCE_OFFICER);
+  const allMaintenanceOfficers = users.filter((user) => user.role === UserRole.MAINTENANCE_OFFICER);
   // For the specialized dropdown, exclude the already-assigned primary officer
   const specializedOfficerOptions = allMaintenanceOfficers.filter(
     (u) => u.name !== request.maintenanceExecution?.assignedOfficer
@@ -113,6 +257,7 @@ export function RequestDetailsPage() {
   const handleActionConfirm = async () => {
     if (!confirmAction || !currentUser) return;
     setIsSubmitting(true);
+    setActionError('');
 
     let additionalData: Record<string, unknown> = {};
     if (confirmAction === 'route_to_maintenance') {
@@ -126,6 +271,10 @@ export function RequestDetailsPage() {
         },
       };
     }
+    if (confirmAction === 'final_return') {
+      // Final return always routes back to the maintenance officer for rework
+      additionalData = { pendingReturnToRole: UserRole.MAINTENANCE_OFFICER };
+    }
     if (confirmAction === 'complete_execution') {
       additionalData = {
         maintenanceOutcome: selectedOutcome,
@@ -136,17 +285,94 @@ export function RequestDetailsPage() {
       };
     }
 
-    await new Promise((r) => setTimeout(r, 500));
-    performAction(request.id, confirmAction, currentUser.name, currentUser.role, actionNotes, additionalData as Parameters<typeof performAction>[5]);
+    const success = await performAction(
+      request.id,
+      confirmAction,
+      currentUser.name,
+      currentUser.role,
+      actionNotes,
+      additionalData as Partial<MaintenanceRequest>
+    );
     setIsSubmitting(false);
+
+    if (!success) {
+      setActionError(requestError ?? 'تعذر تنفيذ الإجراء.');
+      return;
+    }
+
+    const ACTION_SUCCESS_MESSAGES: Record<string, string> = {
+      transport_approve: 'تمت الموافقة وإحالة الطلب بنجاح',
+      transport_reject: 'تم رفض الطلب',
+      transport_return: 'تم إرجاع الطلب للاستكمال',
+      supply_approve: 'تمت الموافقة وإحالة الطلب بنجاح',
+      supply_reject: 'تم رفض الطلب',
+      route_to_maintenance: 'تم توجيه الطلب لمسؤول الصيانة',
+      maintenance_director_reject: 'تم رفض الطلب',
+      start_execution: 'تم بدء التنفيذ بنجاح',
+      maintenance_reject: 'تم رفض الطلب',
+      maintenance_return: 'تم إرجاع الطلب للاستكمال',
+      route_to_specialized: 'تم التوجيه للمسؤول المختص',
+      specialized_execute: 'تم بدء التنفيذ بنجاح',
+      specialized_reject: 'تم رفض الطلب',
+      specialized_return: 'تم إرجاع الطلب للاستكمال',
+      complete_execution: 'تم إتمام التنفيذ وإحالة الطلب للمراجعة النهائية',
+      final_approve: 'تم الاعتماد النهائي للطلب',
+      final_return: 'تم إرجاع الطلب لإستكمال أعمال الصيانة',
+      resubmit: 'تمت إعادة تقديم الطلب بنجاح',
+      close: 'تم إغلاق الطلب بنجاح',
+    };
+
+    setSuccessMessage(ACTION_SUCCESS_MESSAGES[confirmAction] ?? 'تم تنفيذ الإجراء بنجاح');
+    setTimeout(() => setSuccessMessage(''), 5000);
+
     setConfirmAction(null);
     setActionNotes('');
+    setExecutionAttachment(null);
   };
 
-  const handleAddComment = () => {
+  const handleAddComment = async () => {
     if (!commentText.trim() || !currentUser) return;
-    addComment(request.id, commentText.trim(), currentUser.name, currentUser.role);
-    setCommentText('');
+
+    try {
+      setActionError('');
+      await addComment(request.id, commentText.trim(), currentUser.name, currentUser.role);
+      setCommentText('');
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : 'تعذر إضافة التعليق.');
+    }
+  };
+
+  const handleWorkflowSubmit = async (formData: Record<string, unknown>) => {
+    if (!currentUser) {
+      return;
+    }
+
+    setIsWorkflowSubmitting(true);
+    setActionError('');
+
+    try {
+      await requestApi.submitWorkflowTask(request.id, {
+        performedBy: currentUser.name,
+        performedByRole: currentUser.role,
+        variables: formData,
+      });
+      await loadRequests(true);
+      const refreshedContext = await requestApi.getWorkflowContext(request.id, currentUser.role);
+      setWorkflowContext(refreshedContext);
+      setWorkflowError('');
+    } catch (error) {
+      try {
+        await loadRequests(true);
+        const refreshedContext = await requestApi.getWorkflowContext(request.id, currentUser.role);
+        setWorkflowContext(refreshedContext);
+        setWorkflowError('');
+      } catch (refreshError) {
+        setWorkflowError(refreshError instanceof Error ? refreshError.message : 'تعذر تحديث حالة المهمة الحالية.');
+      }
+      setActionError(error instanceof Error ? error.message : 'تعذر إرسال نموذج Camunda.');
+    } finally {
+      setIsWorkflowSubmitting(false);
+    }
   };
 
   const TABS: { id: ActiveTab; label: string; icon: React.ElementType; count?: number }[] = [
@@ -157,7 +383,7 @@ export function RequestDetailsPage() {
   ];
 
   return (
-    <div className="max-w-[1400px] space-y-5">
+    <div className="max-w-350 space-y-5">
       <PageHeader
         title={`طلب رقم ${request.requestNumber}`}
         breadcrumbs={[{ label: 'الطلبات', href: '/requests' }, { label: request.requestNumber }]}
@@ -177,7 +403,7 @@ export function RequestDetailsPage() {
       {/* Admin Director — notification-only banner */}
       {isAdminDirector && (
         <div className="flex items-start gap-3 rounded-xl border border-purple-200 bg-purple-50 p-4">
-          <Bell className="h-5 w-5 text-purple-600 mt-0.5 flex-shrink-0" />
+          <Bell className="mt-0.5 h-5 w-5 shrink-0 text-purple-600" />
           <div>
             <p className="text-sm font-semibold text-purple-800">وضع الاطلاع فقط</p>
             <p className="text-xs text-purple-600 mt-0.5">
@@ -187,16 +413,29 @@ export function RequestDetailsPage() {
         </div>
       )}
 
-      {/* Return banner for traffic officer */}
-      {request.pendingReturnToRole && currentUser?.role === UserRole.TRAFFIC_OFFICER && (
+      {/* Success feedback banner */}
+      {successMessage && (
+        <div className="flex items-center gap-3 rounded-xl border border-green-200 bg-green-50 px-4 py-3 shadow-sm">
+          <CheckCircle className="h-5 w-5 shrink-0 text-green-600" />
+          <p className="text-sm font-medium text-green-800">{successMessage}</p>
+        </div>
+      )}
+
+      {/* Return banner for traffic officer — only when request is in a returned state */}
+      {request.pendingReturnToRole && request.status !== 'closed' && currentUser?.role === UserRole.TRAFFIC_OFFICER && (
         <div className="flex items-start gap-3 rounded-xl border border-orange-200 bg-orange-50 p-4">
-          <RotateCcw className="h-5 w-5 text-orange-600 mt-0.5 flex-shrink-0" />
+          <RotateCcw className="mt-0.5 h-5 w-5 shrink-0 text-orange-600" />
           <div>
             <p className="text-sm font-semibold text-orange-800">الطلب معاد للاستكمال</p>
             <p className="text-xs text-orange-600 mt-0.5">
               بعد إعادة التقديم سيُرسل هذا الطلب مباشرة إلى{' '}
               <strong>{ROLE_LABELS[request.pendingReturnToRole]}</strong> الذي أعاده.
             </p>
+            {returnReasonText && (
+              <p className="mt-2 rounded-lg border border-orange-200 bg-white/70 px-3 py-2 text-xs leading-relaxed text-orange-900">
+                <span className="font-semibold">سبب الإرجاع:</span> {returnReasonText}
+              </p>
+            )}
           </div>
         </div>
       )}
@@ -229,6 +468,60 @@ export function RequestDetailsPage() {
           {/* Details Tab */}
           {activeTab === 'details' && (
             <div className="space-y-4">
+              {workflowContext?.enabled && (
+                <div className="space-y-3 rounded-xl border border-border bg-card p-5 shadow-sm">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <h3 className="text-sm font-semibold text-foreground">تكامل Camunda 8</h3>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {workflowContext.task
+                          ? `المهمة الحالية: ${workflowContext.task.name}`
+                          : 'لا توجد مهمة نشطة حالياً لهذا الطلب في Camunda.'}
+                      </p>
+                    </div>
+                    {workflowContext.task?.role && (
+                      <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                        {ROLE_LABELS[workflowContext.task.role]}
+                      </span>
+                    )}
+                  </div>
+
+                  {workflowError && (
+                    <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                      {workflowError}
+                    </div>
+                  )}
+
+                  {isWorkflowLoading && (
+                    <div className="rounded-lg border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
+                      جاري تحميل المهمة الحالية من Camunda...
+                    </div>
+                  )}
+
+                  {!isWorkflowLoading && hasInteractiveWorkflowForm && workflowContext.form && (
+                    <CamundaFormRenderer
+                      schema={workflowContext.form.schema}
+                      onSubmit={handleWorkflowSubmit}
+                      isSubmitting={isWorkflowSubmitting}
+                      defaultValues={workflowContext.form.variables ?? buildWorkflowDefaultValues(request, workflowContext.form.id)}
+                      data={{ ...lookups, ...(workflowContext.form.variables ?? {}) }}
+                    />
+                  )}
+
+                  {!isWorkflowLoading && workflowContext.task && !hasInteractiveWorkflowForm && currentUser && (
+                    <div className="rounded-lg border border-dashed border-border px-4 py-4 text-sm text-muted-foreground">
+                      هذه المهمة مخصصة حالياً إلى {ROLE_LABELS[workflowContext.task.role]}.
+                    </div>
+                  )}
+
+                  {isWorkflowSubmitting && (
+                    <div className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-700">
+                      جاري إرسال النموذج إلى Camunda...
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Meta info */}
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                 {[
@@ -270,7 +563,6 @@ export function RequestDetailsPage() {
                   <div><span className="text-muted-foreground">النوع: </span><span>{request.vehicle.vehicleType}</span></div>
                   <div><span className="text-muted-foreground">الماركة: </span><span>{request.vehicle.make} {request.vehicle.model}</span></div>
                   <div><span className="text-muted-foreground">سنة الصنع: </span><span>{request.vehicle.year}</span></div>
-                  <div><span className="text-muted-foreground">اللون: </span><span>{request.vehicle.color}</span></div>
                   <div className="col-span-2">
                     <span className="text-muted-foreground">الحالة: </span>
                     <span className={cn('font-semibold', request.vehicle.currentCondition === 'non_operational' ? 'text-red-600' : request.vehicle.currentCondition === 'partially' ? 'text-amber-600' : 'text-emerald-600')}>
@@ -288,6 +580,12 @@ export function RequestDetailsPage() {
                 </div>
                 <div className="space-y-3 text-sm">
                   <div><span className="text-muted-foreground">فئة المشكلة: </span><span className="font-semibold">{ISSUE_CATEGORY_LABELS[request.issueCategory]}</span></div>
+                  {request.requestedService && (
+                    <div><span className="text-muted-foreground">الخدمة المطلوبة: </span><span className="font-semibold">{requestedServiceLabel}</span></div>
+                  )}
+                  {request.region && (
+                    <div><span className="text-muted-foreground">المنطقة / الفرع: </span><span className="font-semibold">{regionLabel}</span></div>
+                  )}
                   <div>
                     <p className="text-muted-foreground mb-1">وصف المشكلة:</p>
                     <p className="rounded-lg bg-muted/50 p-3 leading-relaxed">{request.issueDescription}</p>
@@ -335,7 +633,7 @@ export function RequestDetailsPage() {
                       <div className="space-y-2">
                         {request.maintenanceExecution.checklist.map((item) => (
                           <div key={item.id} className="flex items-center gap-2.5">
-                            <div className={cn('flex h-5 w-5 items-center justify-center rounded-full border-2 flex-shrink-0', item.completed ? 'border-emerald-500 bg-emerald-500' : 'border-border')}>
+                            <div className={cn('flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2', item.completed ? 'border-emerald-500 bg-emerald-500' : 'border-border')}>
                               {item.completed && <CheckCircle className="h-3 w-3 text-white" />}
                             </div>
                             <span className={cn('text-sm', item.completed ? 'line-through text-muted-foreground' : 'text-foreground')}>{item.label}</span>
@@ -381,7 +679,7 @@ export function RequestDetailsPage() {
                   <div className="space-y-2">
                     {request.attachments.map((att) => (
                       <div key={att.id} className="flex items-center gap-3 rounded-lg border border-border p-3 hover:bg-muted/30 transition-colors">
-                        <Paperclip className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        <Paperclip className="h-4 w-4 shrink-0 text-muted-foreground" />
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate">{att.name}</p>
                           <p className="text-xs text-muted-foreground">{att.uploadedBy} · {formatDate(att.uploadedAt)}</p>
@@ -407,6 +705,11 @@ export function RequestDetailsPage() {
             <div className="rounded-xl border border-border bg-card p-5 shadow-sm space-y-4">
               <h3 className="text-sm font-semibold text-foreground">التعليقات والملاحظات</h3>
               <div className="space-y-2">
+                {actionError && (
+                  <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                    {actionError}
+                  </div>
+                )}
                 <textarea
                   value={commentText}
                   onChange={(e) => setCommentText(e.target.value)}
@@ -462,7 +765,7 @@ export function RequestDetailsPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {request.finalDocuments.map((doc) => (
                     <div key={doc.id} className="flex items-center gap-3 rounded-xl border border-border p-4 hover:bg-muted/30 transition-colors">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 flex-shrink-0">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-100">
                         <FileText className="h-5 w-5 text-blue-600" />
                       </div>
                       <div className="flex-1 min-w-0">
@@ -499,8 +802,8 @@ export function RequestDetailsPage() {
             </div>
           </div>
 
-          {/* Actions Card */}
-          {allowedTransitions.length > 0 && !isAdminDirector && (
+          {/* Actions Card
+          {showLegacyActions && allowedTransitions.length > 0 && !isAdminDirector && (
             <div className="rounded-xl border border-border bg-card p-5 shadow-sm space-y-3">
               <h3 className="text-sm font-semibold text-foreground">الإجراءات المتاحة</h3>
               <p className="text-xs text-muted-foreground">
@@ -516,17 +819,17 @@ export function RequestDetailsPage() {
                       onClick={() => { setConfirmAction(transition.action); setActionNotes(''); }}
                       className={cn('flex w-full items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all shadow-sm', style)}
                     >
-                      <Icon className="h-4 w-4 flex-shrink-0" />
+                      <Icon className="h-4 w-4 shrink-0" />
                       {transition.actionLabel}
                     </button>
                   );
                 })}
               </div>
             </div>
-          )}
+          )} */}
 
           {/* No actions */}
-          {allowedTransitions.length === 0 && currentUser && !isAdminDirector && (
+          {showLegacyActions && allowedTransitions.length === 0 && currentUser && !isAdminDirector && (
             <div className="rounded-xl border border-border bg-muted/30 p-5 text-center">
               <p className="text-xs text-muted-foreground">
                 لا توجد إجراءات متاحة لك في هذه المرحلة بصفتك {ROLE_LABELS[currentUser.role]}
@@ -552,6 +855,31 @@ export function RequestDetailsPage() {
               : 'primary'
           }
         >
+          {/* Attachment upload for execution start */}
+          {(confirmAction === 'start_execution' || confirmAction === 'specialized_execute') && (
+            <div className="mb-2 space-y-1.5">
+              <label className="block text-xs font-medium text-foreground">مرفق التنفيذ (اختياري)</label>
+              {!executionAttachment ? (
+                <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-input rounded-lg cursor-pointer bg-muted/20 hover:bg-muted/40 transition-colors">
+                  <div className="flex flex-col items-center gap-1">
+                    <Paperclip className="h-5 w-5 text-muted-foreground" />
+                    <span className="text-xs text-muted-foreground">اضغط لرفع ملف</span>
+                  </div>
+                  <input
+                    type="file"
+                    className="hidden"
+                    onChange={(e) => { if (e.target.files?.[0]) setExecutionAttachment(e.target.files[0]); }}
+                  />
+                </label>
+              ) : (
+                <div className="flex items-center justify-between rounded-lg border border-border p-2.5">
+                  <span className="text-xs font-medium text-foreground truncate">{executionAttachment.name}</span>
+                  <button type="button" onClick={() => setExecutionAttachment(null)} className="mr-2 text-xs text-red-500 hover:text-red-700 shrink-0">إزالة</button>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Route to maintenance officer */}
           {confirmAction === 'route_to_maintenance' && (
             <div className="mb-2 space-y-1.5">
@@ -622,7 +950,11 @@ export function RequestDetailsPage() {
               )}
             </div>
           )}
-
+          {actionError && (
+            <div className="mb-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+              {actionError}
+            </div>
+          )}
           <div className="space-y-1.5">
             <label className="block text-xs font-medium text-foreground">
               {confirmAction.includes('reject') || confirmAction.includes('return') ? 'سبب الإجراء *' : 'ملاحظات (اختياري)'}

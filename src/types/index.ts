@@ -2,6 +2,8 @@
 // Enums (as const objects for TS erasableSyntaxOnly)
 // ==========================================
 
+import type { CamundaFormSchema } from './camunda';
+
 export const UserRole = {
   // 1. مسؤول الحركة — request creator & resubmitter
   TRAFFIC_OFFICER: 'traffic_officer',
@@ -251,10 +253,86 @@ export interface MaintenanceRequest {
   finalNotes?: string;
   finalDocuments: FinalDocument[];
   notes?: string;
+  requestedService?: string;
+  region?: string;
+  mobileNumber?: string;
+  vehiclePlate?: string;
+  vehicleCategory?: string;
+  vehicleName?: string;
+  vehicleModel?: string;
+  vehicleYear?: number;
+  batterySize?: string;
+  tireSize?: string;
+  tireCount?: string;
+  otherServiceDescription?: string;
+  requestStatus?: string;
+  rejectionReason?: string;
+  returnReason?: string;
+  finalReturnReason?: string;
+  faultDescription?: string;
+  requiredItem?: string;
+  itemQuantity?: string;
+  vehicleEntryDate?: string;
+  maintenanceAppointmentDate?: string;
+  itemRequestReceivedDate?: string;
+  itemsReceivedDate?: string;
+  warehouseKeeper?: string;
+  warehouseSectionManager?: string;
+  orderNumber?: string;
+  vehicleReceiptDate?: string;
+  vehicleReceiverName?: string;
+  washingDone?: boolean;
+  batteryChanged?: boolean;
+  oilChanged?: boolean;
+  tiresChanged?: boolean;
+  tiresChangedCount?: string;
+  otherActionDone?: boolean;
+  otherActionDescription?: string;
+  workflow?: RequestWorkflow;
   // ── Return-to-same-role tracking ──
   // When a role returns the request, we record where to send it back after resubmission
   pendingReturnToRole?: UserRole;
   pendingReturnToUserId?: string;
+}
+
+export interface RequestWorkflow {
+  bpmnProcessId?: string;
+  processDefinitionKey?: number;
+  processInstanceKey?: number;
+  processVersion?: number;
+  currentTaskId?: string;
+  currentTaskName?: string;
+  currentTaskGroup?: string;
+  currentTaskRole?: UserRole;
+  currentFormId?: string;
+  startedAt?: string;
+  completedAt?: string;
+}
+
+export interface WorkflowTask {
+  id: string;
+  name: string;
+  role: UserRole;
+  candidateGroup?: string;
+  formId?: string;
+}
+
+export interface WorkflowForm {
+  id: string;
+  schema: CamundaFormSchema;
+  variables?: Record<string, unknown>;
+}
+
+export interface RequestStartFormContext {
+  form: WorkflowForm;
+}
+
+export interface RequestWorkflowContext {
+  enabled: boolean;
+  workflow?: RequestWorkflow;
+  task?: WorkflowTask;
+  form?: WorkflowForm;
+  timeline?: Array<Record<string, unknown>>;
 }
 
 export interface Notification {
@@ -266,6 +344,15 @@ export interface Notification {
   requestNumber?: string;
   read: boolean;
   createdAt: string;
+}
+
+export interface DashboardStats {
+  total: number;
+  pendingMyAction: number;
+  returned: number;
+  inMaintenance: number;
+  completed: number;
+  rejected: number;
 }
 
 export interface WorkflowTransition {

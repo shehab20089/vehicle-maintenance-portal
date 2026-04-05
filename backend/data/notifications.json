@@ -1,0 +1,64 @@
+[ {
+  "id" : "notif-1",
+  "type" : "request_returned",
+  "title" : "تم إعادة طلبك",
+  "message" : "تم إعادة طلب الصيانة MR-2026-2002 من مدير شعبة النقل والصيانة لإضافة بيانات داعمة.",
+  "requestId" : "req-002",
+  "requestNumber" : "MR-2026-2002",
+  "read" : true,
+  "createdAt" : "2026-03-30T09:40:00Z"
+}, {
+  "id" : "notif-2",
+  "type" : "request_approved",
+  "title" : "تمت إحالة طلبك للمرحلة التالية",
+  "message" : "تم اعتماد الطلب MR-2026-2003 وإحالته إلى مدير الصيانة بعد مراجعة الإمداد والصيانة.",
+  "requestId" : "req-003",
+  "requestNumber" : "MR-2026-2003",
+  "read" : true,
+  "createdAt" : "2026-03-29T11:00:00Z"
+}, {
+  "id" : "notif-3",
+  "type" : "request_in_execution",
+  "title" : "طلبك تحت التنفيذ",
+  "message" : "بدأ فيصل بن علي الزهراني معالجة أعمال الصيانة على الطلب MR-2026-2006.",
+  "requestId" : "req-006",
+  "requestNumber" : "MR-2026-2006",
+  "read" : true,
+  "createdAt" : "2026-03-31T08:45:00Z"
+}, {
+  "id" : "notif-4",
+  "type" : "request_routed",
+  "title" : "تم تحويل طلبك",
+  "message" : "تمت إحالة الطلب MR-2026-2005 إلى مسؤول الصيانة فيصل بن علي الزهراني.",
+  "requestId" : "req-005",
+  "requestNumber" : "MR-2026-2005",
+  "read" : true,
+  "createdAt" : "2026-03-31T07:30:00Z"
+}, {
+  "id" : "notif-5",
+  "type" : "final_result_available",
+  "title" : "النتيجة النهائية متاحة",
+  "message" : "تم إكمال طلب الصيانة MR-2026-2009 واعتماده نهائياً وأصبحت النتيجة النهائية متاحة.",
+  "requestId" : "req-009",
+  "requestNumber" : "MR-2026-2009",
+  "read" : true,
+  "createdAt" : "2026-03-28T15:30:00Z"
+}, {
+  "id" : "notif-6",
+  "type" : "request_rejected",
+  "title" : "تم رفض طلبك",
+  "message" : "تم رفض طلب الصيانة MR-2026-2010 خلال مرحلة مراجعة الإمداد والصيانة.",
+  "requestId" : "req-010",
+  "requestNumber" : "MR-2026-2010",
+  "read" : true,
+  "createdAt" : "2026-03-27T10:20:00Z"
+}, {
+  "id" : "notif-7",
+  "type" : "final_result_available",
+  "title" : "النتيجة النهائية متاحة",
+  "message" : "أصبحت نتيجة الصيانة والمرفقات النهائية متاحة للطلب MR-2026-2007.",
+  "requestId" : "req-007",
+  "requestNumber" : "MR-2026-2007",
+  "read" : true,
+  "createdAt" : "2026-03-31T13:15:00Z"
+} ]

@@ -5,13 +5,22 @@ import type { CamundaFormSchema } from '@/types/camunda';
 
 interface OfficialCamundaFormViewerProps {
   schema: CamundaFormSchema;
-  onSubmit: (data: any) => void;
-  data?: any;
+  onSubmit: (data: Record<string, unknown>) => void;
+  data?: Record<string, unknown>;
+  defaultValues?: Record<string, unknown>;
+  isSubmitting?: boolean;
 }
 
-export function OfficialCamundaFormViewer({ schema, onSubmit, data = {} }: OfficialCamundaFormViewerProps) {
+export function OfficialCamundaFormViewer({
+  schema,
+  onSubmit,
+  data,
+  defaultValues,
+  isSubmitting = false,
+}: OfficialCamundaFormViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const formInstanceRef = useRef<any>(null);
+  const initialData = defaultValues ?? data ?? {};
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -23,8 +32,10 @@ export function OfficialCamundaFormViewer({ schema, onSubmit, data = {} }: Offic
 
     formInstanceRef.current = form;
 
+    console.log(initialData);
+    
     // Load schema and default data
-    form.importSchema(schema, data).catch((err: any) => {
+    form.importSchema(schema, initialData).catch((err: any) => {
       console.error('Failed to import Camunda Form Schema', err);
     });
 
@@ -41,13 +52,10 @@ export function OfficialCamundaFormViewer({ schema, onSubmit, data = {} }: Offic
     return () => {
       form.destroy();
     };
-  }, [schema, data, onSubmit]);
+  }, [schema, initialData, onSubmit]);
 
   return (
-    <div className="bg-card border border-border rounded-xl p-5 shadow-sm overflow-hidden camunda-official-wrapper">
-      <h3 className="font-semibold text-lg mb-4 text-foreground border-b border-border pb-3">
-        إكمال المهمة (النموذج الرسمي)
-      </h3>
+    <div className={`bg-card border border-border rounded-xl p-5 shadow-sm overflow-hidden camunda-official-wrapper ${isSubmitting ? 'pointer-events-none opacity-70' : ''}`}>
       {/* Container for the Vanilla JS Form Viewer */}
       <div 
         ref={containerRef} 

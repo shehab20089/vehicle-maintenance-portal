@@ -1,0 +1,376 @@
+[
+  {
+    "id": "req-001",
+    "requestNumber": "MR-2026-2001",
+    "requester": {
+      "name": "محمد عبدالله الشهري",
+      "employeeId": "EMP-1001",
+      "department": "إدارة الحركة والمواصلات",
+      "phone": "0501234567",
+      "email": "m.shahri@org.gov.sa"
+    },
+    "vehicle": {
+      "vehicleNumber": "VH-201",
+      "plateNumber": "١٢٣٤ أ ب ج",
+      "vehicleType": "سيارة سيدان",
+      "make": "تويوتا",
+      "model": "كامري",
+      "year": 2022,
+      "color": "أبيض",
+      "currentCondition": "partially"
+    },
+    "issueCategory": "engine",
+    "issueDescription": "صوت غير طبيعي في المحرك مع ملاحظة تسرب خفيف للزيت أثناء التشغيل الصباحي.",
+    "priority": "high",
+    "requestedService": "emergency_maintenance",
+    "region": "riyadh",
+    "status": "under_initial_review",
+    "currentStage": "مراجعة مدير شعبة النقل والصيانة",
+    "currentOwnerRole": "transport_maintenance_section_mgr",
+    "currentOwnerName": "خالد بن سعد القحطاني",
+    "createdAt": "2026-03-31T07:30:00Z",
+    "updatedAt": "2026-03-31T08:20:00Z",
+    "submittedAt": "2026-03-31T08:00:00Z",
+    "attachments": [],
+    "comments": [],
+    "timeline": [
+      {
+        "id": "tl-001-1",
+        "action": "إنشاء الطلب",
+        "description": "تم إنشاء طلب صيانة المركبة",
+        "performedBy": "محمد عبدالله الشهري",
+        "performedByRole": "movement_officer",
+        "timestamp": "2026-03-31T07:30:00Z",
+        "toStatus": "draft"
+      },
+      {
+        "id": "tl-001-2",
+        "action": "تقديم الطلب",
+        "description": "تم تقديم الطلب إلى النظام",
+        "performedBy": "محمد عبدالله الشهري",
+        "performedByRole": "movement_officer",
+        "timestamp": "2026-03-31T08:00:00Z",
+        "fromStatus": "draft",
+        "toStatus": "submitted"
+      },
+      {
+        "id": "tl-001-3",
+        "action": "إشعار مدير الشؤون الإدارية",
+        "description": "تم إشعار مدير الشؤون الإدارية ثم تحويل الطلب تلقائياً للمراجعة الأولية",
+        "performedBy": "النظام",
+        "performedByRole": "admin_affairs_manager",
+        "timestamp": "2026-03-31T08:20:00Z",
+        "fromStatus": "submitted",
+        "toStatus": "under_initial_review"
+      }
+    ],
+    "finalDocuments": [],
+    "notes": "المركبة مرتبطة بجولات تشغيل يومية ويحتاج الطلب إلى معالجة سريعة."
+  },
+  {
+    "id": "req-002",
+    "requestNumber": "MR-2026-2002",
+    "requester": {
+      "name": "محمد عبدالله الشهري",
+      "employeeId": "EMP-1001",
+      "department": "إدارة الحركة والمواصلات",
+      "phone": "0501234567",
+      "email": "m.shahri@org.gov.sa"
+    },
+    "vehicle": {
+      "vehicleNumber": "VH-202",
+      "plateNumber": "٥٦٧٨ د هـ و",
+      "vehicleType": "فان",
+      "make": "هيونداي",
+      "model": "H1",
+      "year": 2021,
+      "color": "فضي",
+      "currentCondition": "partially"
+    },
+    "issueCategory": "brakes",
+    "issueDescription": "أصوات احتكاك حادة من نظام الفرامل مع ضعف ملحوظ في الاستجابة.",
+    "priority": "urgent",
+    "requestedService": "inspection",
+    "region": "jeddah",
+    "status": "returned_for_edit",
+    "currentStage": "معاد للتعديل وإعادة التقديم",
+    "currentOwnerRole": "movement_officer",
+    "currentOwnerName": "محمد عبدالله الشهري",
+    "returnTargetRole": "transport_maintenance_section_mgr",
+    "createdAt": "2026-03-30T07:40:00Z",
+    "updatedAt": "2026-03-30T09:40:00Z",
+    "submittedAt": "2026-03-30T08:00:00Z",
+    "attachments": [],
+    "comments": [
+      {
+        "id": "c-002-1",
+        "text": "يرجى إرفاق تقرير فحص أولي أو توضيح مدى تأثر استخدام المركبة.",
+        "author": "خالد بن سعد القحطاني",
+        "authorRole": "transport_maintenance_section_mgr",
+        "createdAt": "2026-03-30T09:40:00Z"
+      }
+    ],
+    "timeline": [],
+    "finalDocuments": []
+  },
+  {
+    "id": "req-003",
+    "requestNumber": "MR-2026-2003",
+    "requester": {
+      "name": "محمد عبدالله الشهري",
+      "employeeId": "EMP-1001",
+      "department": "إدارة الحركة والمواصلات"
+    },
+    "vehicle": {
+      "vehicleNumber": "VH-203",
+      "plateNumber": "٩١٠١ ز ح ط",
+      "vehicleType": "دفع رباعي",
+      "make": "نيسان",
+      "model": "باترول",
+      "year": 2023,
+      "color": "أبيض",
+      "currentCondition": "operational"
+    },
+    "issueCategory": "oil_change",
+    "issueDescription": "طلب صيانة دورية يشمل تغيير الزيت والفلاتر مع فحص عام للمركبة.",
+    "priority": "medium",
+    "requestedService": "periodic_maintenance",
+    "region": "riyadh",
+    "status": "under_supply_maintenance_review",
+    "currentStage": "مراجعة مدير الإمداد والصيانة",
+    "currentOwnerRole": "supply_maintenance_mgr",
+    "currentOwnerName": "نورة بنت فهد المطيري",
+    "createdAt": "2026-03-29T07:00:00Z",
+    "updatedAt": "2026-03-29T11:00:00Z",
+    "submittedAt": "2026-03-29T07:20:00Z",
+    "attachments": [],
+    "comments": [],
+    "timeline": [],
+    "finalDocuments": []
+  },
+  {
+    "id": "req-004",
+    "requestNumber": "MR-2026-2004",
+    "requester": {
+      "name": "محمد عبدالله الشهري",
+      "employeeId": "EMP-1001",
+      "department": "إدارة الحركة والمواصلات"
+    },
+    "vehicle": {
+      "vehicleNumber": "VH-204",
+      "plateNumber": "٣٤٥٦ ي ك ل",
+      "vehicleType": "شاحنة خفيفة",
+      "make": "فورد",
+      "model": "F-150",
+      "year": 2020,
+      "color": "أزرق",
+      "currentCondition": "non_operational"
+    },
+    "issueCategory": "electrical",
+    "issueDescription": "تعذر تشغيل المركبة مع انقطاع كامل في النظام الكهربائي ولوحة العدادات.",
+    "priority": "urgent",
+    "requestedService": "emergency_maintenance",
+    "region": "dammam",
+    "status": "under_maintenance_processing",
+    "currentStage": "معالجة مسؤول الصيانة",
+    "currentOwnerRole": "maintenance_officer",
+    "currentOwnerName": "أحمد محمد",
+    "currentMaintenanceOfficerId": "u6",
+    "returnTargetOfficerId": "u6",
+    "createdAt": "2026-03-30T10:00:00Z",
+    "updatedAt": "2026-03-31T08:45:00Z",
+    "submittedAt": "2026-03-30T10:15:00Z",
+    "attachments": [],
+    "comments": [],
+    "timeline": [],
+    "maintenanceExecution": {
+      "assignedOfficer": "أحمد محمد",
+      "startDate": "2026-03-31T08:45:00Z",
+      "estimatedCompletion": "2026-04-02T14:00:00Z",
+      "workDescription": "فحص دورة التكييف وتحديد القطع المطلوبة."
+    },
+    "finalDocuments": []
+  },
+  {
+    "id": "req-005",
+    "requestNumber": "MR-2026-2005",
+    "requester": {
+      "name": "محمد عبدالله الشهري",
+      "employeeId": "EMP-1001",
+      "department": "إدارة الحركة والمواصلات"
+    },
+    "vehicle": {
+      "vehicleNumber": "VH-205",
+      "plateNumber": "٧٨٩٠ م ن هـ",
+      "vehicleType": "سيارة رباعية الدفع",
+      "make": "تويوتا",
+      "model": "لاند كروزر",
+      "year": 2021,
+      "color": "أسود",
+      "currentCondition": "non_operational"
+    },
+    "issueCategory": "suspension",
+    "issueDescription": "هبوط واضح في الجهة الأمامية للمركبة مع اهتزاز شديد أثناء الحركة.",
+    "priority": "high",
+    "requestedService": "inspection",
+    "region": "makkah",
+    "status": "pending_final_approval",
+    "currentStage": "بانتظار الاعتماد النهائي",
+    "currentOwnerRole": "transport_maintenance_section_mgr",
+    "currentOwnerName": "خالد بن سعد القحطاني",
+    "currentMaintenanceOfficerId": "u7",
+    "returnTargetOfficerId": "u7",
+    "createdAt": "2026-03-29T06:30:00Z",
+    "updatedAt": "2026-03-31T13:15:00Z",
+    "submittedAt": "2026-03-29T07:00:00Z",
+    "attachments": [],
+    "comments": [],
+    "timeline": [],
+    "maintenanceExecution": {
+      "assignedOfficer": "خالد عبدالله",
+      "startDate": "2026-03-31T09:00:00Z",
+      "actualCompletion": "2026-03-31T13:00:00Z",
+      "workDescription": "استبدال الإطارات الأربعة وإجراء اختبار اتزان."
+    },
+    "maintenanceOutcome": "notify_spare_parts",
+    "finalDocuments": [
+      {
+        "id": "doc-005-1",
+        "title": "تقرير الصيانة الأولي",
+        "type": "maintenance_report",
+        "generatedAt": "2026-03-31T13:10:00Z",
+        "url": "#"
+      }
+    ]
+  },
+  {
+    "id": "req-006",
+    "requestNumber": "MR-2026-2006",
+    "requester": {
+      "name": "محمد عبدالله الشهري",
+      "employeeId": "EMP-1001",
+      "department": "إدارة الحركة والمواصلات"
+    },
+    "vehicle": {
+      "vehicleNumber": "VH-206",
+      "plateNumber": "١١١١ أ ج هـ",
+      "vehicleType": "سيارة سيدان",
+      "make": "هيونداي",
+      "model": "سوناتا",
+      "year": 2020,
+      "color": "رمادي",
+      "currentCondition": "partially"
+    },
+    "issueCategory": "ac",
+    "issueDescription": "ضعف شديد في التكييف مع توقف المروحة الداخلية بشكل متقطع.",
+    "priority": "medium",
+    "requestedService": "inspection",
+    "region": "madinah",
+    "status": "returned_to_maintenance_processing",
+    "currentStage": "معاد إلى مسؤول الصيانة",
+    "currentOwnerRole": "maintenance_officer",
+    "currentOwnerName": "سعد إبراهيم",
+    "currentMaintenanceOfficerId": "u8",
+    "returnTargetOfficerId": "u8",
+    "createdAt": "2026-03-27T07:10:00Z",
+    "updatedAt": "2026-03-31T12:40:00Z",
+    "submittedAt": "2026-03-27T07:30:00Z",
+    "attachments": [],
+    "comments": [],
+    "timeline": [],
+    "maintenanceExecution": {
+      "assignedOfficer": "سعد إبراهيم",
+      "startDate": "2026-03-30T08:00:00Z",
+      "workDescription": "فحص ناقل الحركة واستبدال زيت القير والفلتر."
+    },
+    "finalDocuments": []
+  },
+  {
+    "id": "req-007",
+    "requestNumber": "MR-2026-2007",
+    "requester": {
+      "name": "محمد عبدالله الشهري",
+      "employeeId": "EMP-1001",
+      "department": "إدارة الحركة والمواصلات"
+    },
+    "vehicle": {
+      "vehicleNumber": "VH-207",
+      "plateNumber": "٢٢٢٢ س ش ص",
+      "vehicleType": "فان",
+      "make": "مرسيدس",
+      "model": "Sprinter",
+      "year": 2019,
+      "color": "أبيض",
+      "currentCondition": "operational"
+    },
+    "issueCategory": "tires",
+    "issueDescription": "تآكل شديد في الإطارات الخلفية والحاجة إلى استبدال عاجل قبل الرحلة القادمة.",
+    "priority": "high",
+    "requestedService": "tire_change",
+    "region": "jeddah",
+    "status": "completed",
+    "currentStage": "مكتمل",
+    "currentOwnerRole": "movement_officer",
+    "currentOwnerName": "محمد عبدالله الشهري",
+    "currentMaintenanceOfficerId": "u7",
+    "createdAt": "2026-03-26T08:00:00Z",
+    "updatedAt": "2026-03-28T15:30:00Z",
+    "submittedAt": "2026-03-26T08:20:00Z",
+    "attachments": [],
+    "comments": [],
+    "timeline": [],
+    "maintenanceExecution": {
+      "assignedOfficer": "خالد عبدالله",
+      "startDate": "2026-03-28T10:00:00Z",
+      "actualCompletion": "2026-03-28T14:30:00Z",
+      "workDescription": "استبدال الإطارات واختبار الاتزان."
+    },
+    "maintenanceOutcome": "completed_with_report",
+    "finalDecision": "completed",
+    "finalNotes": "تمت الصيانة بنجاح واعتمدت نهائياً.",
+    "finalDocuments": [
+      {
+        "id": "doc-007-1",
+        "title": "تقرير الصيانة",
+        "type": "maintenance_report",
+        "generatedAt": "2026-03-28T15:00:00Z",
+        "url": "#"
+      }
+    ]
+  },
+  {
+    "id": "req-008",
+    "requestNumber": "MR-2026-2008",
+    "requester": {
+      "name": "محمد عبدالله الشهري",
+      "employeeId": "EMP-1001",
+      "department": "إدارة الحركة والمواصلات"
+    },
+    "vehicle": {
+      "vehicleNumber": "VH-208",
+      "plateNumber": "٥٥٥٥ ت ث خ",
+      "vehicleType": "حافلة",
+      "make": "إيسوزو",
+      "model": "NQR",
+      "year": 2018,
+      "color": "أبيض",
+      "currentCondition": "operational"
+    },
+    "issueCategory": "body",
+    "issueDescription": "طلب إصلاح خدوش خارجية تجميلية لا تؤثر على التشغيل.",
+    "priority": "low",
+    "requestedService": "other",
+    "region": "jeddah",
+    "status": "rejected",
+    "currentStage": "مرفوض",
+    "currentOwnerRole": "movement_officer",
+    "currentOwnerName": "محمد عبدالله الشهري",
+    "createdAt": "2026-03-27T08:10:00Z",
+    "updatedAt": "2026-03-27T10:20:00Z",
+    "submittedAt": "2026-03-27T08:30:00Z",
+    "attachments": [],
+    "comments": [],
+    "timeline": [],
+    "finalDocuments": []
+  }
+]

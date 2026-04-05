@@ -46,7 +46,7 @@ export function WorkflowStepper({ currentStatus, className }: WorkflowStepperPro
                 </div>
                 <span
                   className={cn(
-                    'text-[10px] whitespace-nowrap font-medium max-w-[72px] text-center leading-tight',
+                    'text-[10px] whitespace-nowrap font-medium max-w-[90px] text-center leading-tight',
                     isDone && 'text-emerald-600',
                     isCurrent && !isCurrentRejected && 'text-primary',
                     isCurrentRejected && 'text-red-600',

@@ -18,7 +18,7 @@ type SortDir = 'asc' | 'desc';
 const PRIORITY_ORDER: Record<Priority, number> = { urgent: 0, high: 1, medium: 2, low: 3 };
 
 export function RequestListPage() {
-  const { requests } = useRequestStore();
+  const { requests, isLoading } = useRequestStore();
   const { currentUser } = useAuthStore();
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
@@ -32,6 +32,18 @@ export function RequestListPage() {
 
   const filtered = useMemo(() => {
     let list = [...requests];
+
+    // Role-based visibility: each role only sees requests relevant to them
+    if (currentUser?.role === UserRole.TRAFFIC_OFFICER) {
+      list = list.filter((r) => r.requester.employeeId === currentUser.employeeId);
+    } else if (currentUser?.role === UserRole.MAINTENANCE_OFFICER) {
+      list = list.filter(
+        (r) =>
+          r.maintenanceExecution?.assignedOfficer === currentUser.name ||
+          r.maintenanceExecution?.specializedOfficer === currentUser.name
+      );
+    }
+    // Admin, directors, and other roles see all requests
 
     if (search) {
       const q = search.toLowerCase();
@@ -167,7 +179,9 @@ export function RequestListPage() {
 
       {/* Table */}
       <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
-        {paginated.length === 0 ? (
+        {isLoading && requests.length === 0 ? (
+          <div className="px-6 py-10 text-center text-sm text-muted-foreground">جاري تحميل الطلبات...</div>
+        ) : paginated.length === 0 ? (
           <EmptyState
             icon={ClipboardList}
             title="لا توجد نتائج"

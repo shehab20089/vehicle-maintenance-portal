@@ -15,10 +15,15 @@ export interface CamundaFormComponent {
   key: string;
   type: 'textfield' | 'textarea' | 'number' | 'password' | 'email' | 'checkbox' | 'radio' | 'select' | 'button' | 'text' | 'datetime' | 'file' | string;
   label: string;
+  text?: string;
+  accept?: string;
   description?: string;
   disabled?: boolean;
   readonly?: boolean;
   defaultValue?: any;
+  conditional?: {
+    hide?: string;
+  };
   layout?: {
     row: string;
     columns: number | null;
@@ -39,5 +44,7 @@ export interface CamundaFormComponent {
   values?: Array<{
     label: string;
     value: string;
-  }>; // For Select/Radio
+  }>; // For Select/Radio (static)
+  valuesExpression?: string; // For Select/Radio (FEEL expression e.g. "=myOptions")
+  valuesKey?: string; // For Select/Radio (input data / valuesKey e.g. "=myOptions")
 }

@@ -127,13 +127,12 @@ export const STATUS_COLOR_MAP: Record<RequestStatus, StatusColorType> = {
 // ==========================================
 export const WORKFLOW_STAGES = [
   { key: 'submitted', label: 'التقديم' },
-  { key: 'admin_notified', label: 'إشعار الشؤون الإدارية' },
-  { key: 'transport_review', label: 'مراجعة النقل والصيانة' },
-  { key: 'supply_review', label: 'مراجعة الإمداد والصيانة' },
+  { key: 'admin_notified', label: 'الإشعار' },
+  { key: 'transport_review', label: 'مراجعة النقل' },
+  { key: 'supply_review', label: 'مراجعة الإمداد' },
   { key: 'maintenance_director', label: 'توجيه الصيانة' },
   { key: 'execution', label: 'التنفيذ' },
-  { key: 'final_review', label: 'المراجعة النهائية' },
-  { key: 'closed', label: 'الإغلاق' },
+  { key: 'final_review', label: 'المراجعة النهائية' }
 ] as const;
 
 export function getWorkflowStageIndex(status: RequestStatus): number {
@@ -165,7 +164,7 @@ export function getWorkflowStageIndex(status: RequestStatus): number {
     case 'under_final_review':
     case 'returned_from_final':
     case 'approved_final':
-      return 6;
+      return 7;
     case 'closed':
       return 7;
     default:

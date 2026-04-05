@@ -8,6 +8,8 @@ interface CamundaFormRendererProps {
   onSubmit: (data: any) => void;
   isSubmitting?: boolean;
   defaultValues?: any;
+  /** Extra variables passed to the form for dynamic option resolution (valuesExpression) */
+  data?: Record<string, unknown>;
 }
 
 function FieldError({ message }: { message?: string }) {
@@ -40,11 +42,73 @@ function FormFieldWrapper({
   );
 }
 
-export function CamundaFormRenderer({ schema, onSubmit, isSubmitting, defaultValues = {} }: CamundaFormRendererProps) {
+function evaluateCondition(expression: string, values: Record<string, any>): boolean {
+  if (!expression) return true;
+  // FEEL-like hide expressions: "=action != \"return\"", "=faultDescription = null or faultDescription = \"\""
+  let expr = expression.startsWith('=') ? expression.slice(1).trim() : expression.trim();
+
+  // Handle "or" by splitting and returning true (show) only when ALL parts are false (none hides)
+  if (expr.includes(' or ')) {
+    const parts = expr.split(' or ').map(p => p.trim());
+    const anyTrue = parts.some(p => evaluateSingleCondition(p, values));
+    return !anyTrue; // hide=true means don't show
+  }
+
+  return !evaluateSingleCondition(expr, values);
+}
+
+function evaluateSingleCondition(expr: string, values: Record<string, any>): boolean {
+  // "field != value" or "field = value"
+  let match = expr.match(/^(\w+)\s*!=\s*(.+)$/);
+  if (match) {
+    const [, field, rawVal] = match;
+    const expected = parseFeelValue(rawVal);
+    return values[field] !== expected;
+  }
+  match = expr.match(/^(\w+)\s*=\s*(.+)$/);
+  if (match) {
+    const [, field, rawVal] = match;
+    const expected = parseFeelValue(rawVal);
+    return values[field] === expected || (expected === null && (values[field] === undefined || values[field] === '' || values[field] === null));
+  }
+  return false;
+}
+
+function parseFeelValue(raw: string): any {
+  const trimmed = raw.trim();
+  if (trimmed === 'null') return null;
+  if (trimmed === 'true') return true;
+  if (trimmed === 'false') return false;
+  if (trimmed.startsWith('"') && trimmed.endsWith('"')) return trimmed.slice(1, -1);
+  return trimmed;
+}
+
+/**
+ * Resolve a FEEL-like valuesExpression (e.g. "=vehicleTypes") against the
+ * provided data context. Returns an array of {label, value} or empty array.
+ */
+function resolveValuesExpression(
+  expression: string | undefined,
+  data: Record<string, unknown>
+): Array<{ label: string; value: string }> {
+  if (!expression) return [];
+  const varName = expression.startsWith('=') ? expression.slice(1).trim() : expression.trim();
+  const resolved = data[varName];
+  if (!Array.isArray(resolved)) return [];
+  return resolved
+    .filter((item): item is Record<string, unknown> => item != null && typeof item === 'object')
+    .map(item => ({
+      label: String(item.label ?? item.value ?? ''),
+      value: String(item.value ?? item.label ?? ''),
+    }));
+}
+
+export function CamundaFormRenderer({ schema, onSubmit, isSubmitting, defaultValues = {}, data: externalData = {} }: CamundaFormRendererProps) {
   const { register, handleSubmit, formState: { errors }, watch, setValue } = useForm({
     defaultValues
   });
   const [uploadedFiles, setUploadedFiles] = useState<Record<string, File>>({});
+  const watchedValues = watch();
 
   const handleFormSubmit = (data: any) => {
     // Merge file data if needed, or pass it directly. We'll pass filenames or file objects.
@@ -71,8 +135,20 @@ export function CamundaFormRenderer({ schema, onSubmit, isSubmitting, defaultVal
     if (comp.validate?.pattern) validationRules.pattern = { value: new RegExp(comp.validate.pattern), message: 'صيغة غير صحيحة' };
 
     switch (comp.type) {
-      case 'textfield':
       case 'text':
+        // Static text/markdown display — headings and dividers
+        return (
+          <div key={comp.key} className="mb-4">
+            {comp.text?.split('\n').map((line: string, i: number) => {
+              if (line.startsWith('## ')) return <h2 key={i} className="text-lg font-semibold text-foreground mt-2">{line.slice(3)}</h2>;
+              if (line.startsWith('# ')) return <h1 key={i} className="text-xl font-bold text-foreground mt-2">{line.slice(2)}</h1>;
+              if (line.trim() === '---') return <hr key={i} className="border-border my-3" />;
+              return line.trim() ? <p key={i} className="text-sm text-muted-foreground">{line}</p> : null;
+            })}
+          </div>
+        );
+
+      case 'textfield':
       case 'email':
       case 'password':
       case 'number':
@@ -80,10 +156,25 @@ export function CamundaFormRenderer({ schema, onSubmit, isSubmitting, defaultVal
           <FormFieldWrapper key={comp.key} label={label} required={isRequired} error={errors[comp.key]} helper={comp.description}>
             <input
               type={comp.type === 'textfield' ? 'text' : comp.type}
+              {...register(comp.key, comp.type === 'number' ? { ...validationRules, valueAsNumber: true } : validationRules)}
+              disabled={comp.disabled}
+              readOnly={comp.readonly}
+              className={`${inputClass}${comp.readonly ? ' bg-muted/50 cursor-default' : ''}`}
+            />
+          </FormFieldWrapper>
+        );
+
+      case 'datetime':
+      case 'date':
+      case 'time':
+        return (
+          <FormFieldWrapper key={comp.key} label={label} required={isRequired} error={errors[comp.key]} helper={comp.description}>
+            <input
+              type={comp.type === 'datetime' ? 'datetime-local' : comp.type}
               {...register(comp.key, validationRules)}
               disabled={comp.disabled}
               readOnly={comp.readonly}
-              className={inputClass}
+              className={`${inputClass}${comp.readonly ? ' bg-muted/50 cursor-default' : ''}`}
             />
           </FormFieldWrapper>
         );
@@ -100,7 +191,9 @@ export function CamundaFormRenderer({ schema, onSubmit, isSubmitting, defaultVal
           </FormFieldWrapper>
         );
 
-      case 'select':
+      case 'select': {
+        const dynamicExpr = comp.valuesExpression ?? comp.valuesKey;
+        const options = comp.values?.length ? comp.values : resolveValuesExpression(dynamicExpr, externalData);
         return (
           <FormFieldWrapper key={comp.key} label={label} required={isRequired} error={errors[comp.key]} helper={comp.description}>
             <select
@@ -109,10 +202,49 @@ export function CamundaFormRenderer({ schema, onSubmit, isSubmitting, defaultVal
               className={`${inputClass} cursor-pointer`}
             >
               <option value="">اختر...</option>
-              {comp.values?.map(v => (
+              {options.map(v => (
                 <option key={v.value} value={v.value}>{v.label}</option>
               ))}
             </select>
+          </FormFieldWrapper>
+        );
+      }
+
+      case 'radio': {
+        const dynamicExpr = comp.valuesExpression ?? comp.valuesKey;
+        const options = comp.values?.length ? comp.values : resolveValuesExpression(dynamicExpr, externalData);
+        return (
+          <FormFieldWrapper key={comp.key} label={label} required={isRequired} error={errors[comp.key]} helper={comp.description}>
+            <div className="space-y-2 mt-1">
+              {options.map(v => (
+                <label key={v.value} className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    value={v.value}
+                    {...register(comp.key, validationRules)}
+                    disabled={comp.disabled || comp.readonly}
+                    className="h-4 w-4 text-primary border-input focus:ring-ring"
+                  />
+                  <span className="text-sm text-foreground">{v.label}</span>
+                </label>
+              ))}
+            </div>
+          </FormFieldWrapper>
+        );
+      }
+
+      case 'checkbox':
+        return (
+          <FormFieldWrapper key={comp.key} label="" required={false} error={errors[comp.key]} helper={comp.description}>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                {...register(comp.key, validationRules)}
+                disabled={comp.disabled || comp.readonly}
+                className="h-4 w-4 rounded border-input text-primary focus:ring-ring"
+              />
+              <span className="text-sm text-foreground">{label}</span>
+            </label>
           </FormFieldWrapper>
         );
 
@@ -187,15 +319,21 @@ export function CamundaFormRenderer({ schema, onSubmit, isSubmitting, defaultVal
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
-      <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
-        <h3 className="font-semibold text-lg mb-4 text-foreground border-b border-border pb-3">إكمال المهمة</h3>
-        
+      <div className="bg-card border border-border rounded-xl p-5 shadow-sm">        
         <div className="grid grid-cols-1 gap-x-6 gap-y-2 lg:grid-cols-2">
-          {schema.components.map(comp => (
-            <div key={comp.key} className={comp.type === 'textarea' || comp.type === 'file' ? 'lg:col-span-2' : 'col-span-1'}>
-              {renderComponent(comp)}
-            </div>
-          ))}
+          {schema.components.map(comp => {
+            // Evaluate conditional hide
+            if (comp.conditional?.hide) {
+              const visible = evaluateCondition(comp.conditional.hide, watchedValues);
+              if (!visible) return null;
+            }
+            const fullWidth = comp.type === 'textarea' || comp.type === 'file' || comp.type === 'text' || comp.type === 'radio';
+            return (
+              <div key={comp.key} className={fullWidth ? 'lg:col-span-2' : 'col-span-1'}>
+                {renderComponent(comp)}
+              </div>
+            );
+          })}
         </div>
 
         <div className="mt-6 flex justify-end">

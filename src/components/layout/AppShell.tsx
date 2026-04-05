@@ -1,10 +1,22 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
+import { useAuthStore } from '@/store/authStore';
+import { useRequestStore } from '@/store/requestStore';
+import { useNotificationStore } from '@/store/notificationStore';
 
 export function AppShell() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const { loadUsers } = useAuthStore();
+  const { loadRequests } = useRequestStore();
+  const { loadNotifications } = useNotificationStore();
+
+  useEffect(() => {
+    void loadUsers();
+    void loadRequests();
+    void loadNotifications();
+  }, [loadNotifications, loadRequests, loadUsers]);
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">

@@ -13,7 +13,7 @@ import { UserRole } from '@/types';
 import { useState } from 'react';
 
 export function DashboardPage() {
-  const { requests, getStats } = useRequestStore();
+  const { requests, getStats, isLoading } = useRequestStore();
   const { currentUser } = useAuthStore();
   const navigate = useNavigate();
   const stats = getStats();
@@ -142,7 +142,9 @@ export function DashboardPage() {
           </div>
 
           <div className="overflow-x-auto">
-            {recentRequests.length === 0 ? (
+            {isLoading && requests.length === 0 ? (
+              <div className="px-5 py-10 text-center text-sm text-muted-foreground">جاري تحميل الطلبات...</div>
+            ) : recentRequests.length === 0 ? (
               <EmptyState
                 icon={ClipboardList}
                 title="لا توجد طلبات"

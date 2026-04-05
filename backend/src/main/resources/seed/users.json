@@ -1,0 +1,65 @@
+[
+  {
+    "id": "u1",
+    "name": "محمد عبدالله الشهري",
+    "employeeId": "EMP-1042",
+    "role": "traffic_officer",
+    "department": "إدارة الحركة والمواصلات",
+    "email": "m.shahri@org.gov.sa",
+    "password": "123456"
+  },
+  {
+    "id": "u2",
+    "name": "سلمى بنت أحمد العتيبي",
+    "employeeId": "EMP-2018",
+    "role": "admin_director",
+    "department": "إدارة الشؤون الإدارية",
+    "email": "s.otaibi@org.gov.sa",
+    "password": "123456"
+  },
+  {
+    "id": "u3",
+    "name": "خالد بن سعد القحطاني",
+    "employeeId": "EMP-3055",
+    "role": "transport_maintenance_director",
+    "department": "شعبة النقل والصيانة",
+    "email": "k.qahtani@org.gov.sa",
+    "password": "123456"
+  },
+  {
+    "id": "u4",
+    "name": "عبدالرحمن بن فهد الدوسري",
+    "employeeId": "EMP-4011",
+    "role": "supply_maintenance_director",
+    "department": "إدارة الإمداد والصيانة",
+    "email": "a.dosari@org.gov.sa",
+    "password": "123456"
+  },
+  {
+    "id": "u5",
+    "name": "سعود بن ناصر الحربي",
+    "employeeId": "EMP-5033",
+    "role": "maintenance_director",
+    "department": "إدارة الصيانة",
+    "email": "s.harbi@org.gov.sa",
+    "password": "123456"
+  },
+  {
+    "id": "u6",
+    "name": "فيصل بن علي الزهراني",
+    "employeeId": "EMP-6099",
+    "role": "maintenance_officer",
+    "department": "قسم الصيانة الميدانية",
+    "email": "f.zahrani@org.gov.sa",
+    "password": "123456"
+  },
+  {
+    "id": "u7",
+    "name": "أحمد بن سعد الغامدي",
+    "employeeId": "EMP-7077",
+    "role": "maintenance_officer",
+    "department": "قسم الصيانة التخصصية",
+    "email": "a.ghamdi@org.gov.sa",
+    "password": "123456"
+  }
+]
