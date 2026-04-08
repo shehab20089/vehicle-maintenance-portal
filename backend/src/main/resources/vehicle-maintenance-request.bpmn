@@ -1,0 +1,414 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bioc="http://bpmn.io/schema/bpmn/biocolor/1.0" xmlns:color="http://www.omg.org/spec/BPMN/non-normative/color/1.0" xmlns:zeebe="http://camunda.org/schema/zeebe/1.0" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Web Modeler" exporterVersion="a0293e6" modeler:executionPlatform="Camunda Cloud" modeler:executionPlatformVersion="8.6.0">
+  <bpmn:process id="Process_VehicleMaintenanceRequest" name="خدمة طلب صيانة المركبات" isExecutable="true">
+    <bpmn:startEvent id="start_vehicle_maintenance" name="بداية طلب صيانة المركبات">
+      <bpmn:outgoing>flow_start_to_submit</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <bpmn:userTask id="task_submit_request" name="تقديم طلب الصيانة">
+      <bpmn:extensionElements>
+        <zeebe:assignmentDefinition candidateGroups="movement_officer" />
+        <zeebe:ioMapping>
+          <zeebe:output source="=&#34;UNDER_INITIAL_REVIEW&#34;" target="requestStatus" />
+        </zeebe:ioMapping>
+        <zeebe:formDefinition formId="form_submit_request" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>flow_start_to_submit</bpmn:incoming>
+      <bpmn:outgoing>flow_submit_to_initial_review</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:userTask id="task_transport_maint_section_mgr_review" name="مراجعة رئيس قسم النقل والصيانة">
+      <bpmn:extensionElements>
+        <zeebe:formDefinition formId="form_initial_review" />
+        <zeebe:assignmentDefinition candidateGroups="transport_maintenance_section_mgr" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>flow_submit_to_initial_review</bpmn:incoming>
+      <bpmn:outgoing>flow_initial_review_to_gw</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:exclusiveGateway id="gw_initial_review_decision" name="قرار المراجعة الأولية">
+      <bpmn:incoming>flow_initial_review_to_gw</bpmn:incoming>
+      <bpmn:outgoing>flow_initial_approve</bpmn:outgoing>
+      <bpmn:outgoing>flow_initial_reject_to_end</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:userTask id="task_supply_maint_mgr_review" name="مراجعة مدير التموين والصيانة">
+      <bpmn:extensionElements>
+        <zeebe:formDefinition formId="form_supply_maint_review" />
+        <zeebe:assignmentDefinition candidateGroups="supply_maintenance_mgr" />
+        <zeebe:ioMapping>
+          <zeebe:output source="=&#34;UNDER_SUPPLY_MAINTENANCE_REVIEW&#34;" target="requestStatus" />
+          <zeebe:output source="=action" target="action" />
+        </zeebe:ioMapping>
+      </bpmn:extensionElements>
+      <bpmn:incoming>flow_initial_approve</bpmn:incoming>
+      <bpmn:outgoing>flow_supply_review_to_gw</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:exclusiveGateway id="gw_supply_review_decision" name="قرار مراجعة التموين">
+      <bpmn:incoming>flow_supply_review_to_gw</bpmn:incoming>
+      <bpmn:outgoing>flow_supply_approve</bpmn:outgoing>
+      <bpmn:outgoing>flow_supply_reject_to_end</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:userTask id="task_maintenance_mgr_review" name="مراجعة مدير الصيانة">
+      <bpmn:extensionElements>
+        <zeebe:formDefinition formId="form_maintenance_mgr_review" />
+        <zeebe:assignmentDefinition candidateGroups="maintenance_mgr" />
+        <zeebe:ioMapping>
+          <zeebe:output source="=&#34;UNDER_MAINTENANCE_MANAGER_REVIEW&#34;" target="requestStatus" />
+          <zeebe:output source="=action" target="action" />
+          <zeebe:output source="=assignedOfficer" target="currentMaintenanceOfficer" />
+          <zeebe:output source="=\&quot;\&quot;" target="specialistUserId" />
+        </zeebe:ioMapping>
+      </bpmn:extensionElements>
+      <bpmn:incoming>flow_supply_approve</bpmn:incoming>
+      <bpmn:outgoing>flow_maint_mgr_to_gw</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:exclusiveGateway id="gw_maint_mgr_decision" name="قرار مدير الصيانة">
+      <bpmn:incoming>flow_maint_mgr_to_gw</bpmn:incoming>
+      <bpmn:outgoing>flow_maint_mgr_route</bpmn:outgoing>
+      <bpmn:outgoing>flow_maint_mgr_reject_to_end</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:userTask id="task_maintenance_officer_processing" name="معالجة مسؤول الصيانة">
+      <bpmn:extensionElements>
+        <zeebe:formDefinition formId="form_maintenance_processing" />
+        <zeebe:assignmentDefinition assignee="=currentMaintenanceOfficer" candidateGroups="maintenance_officer" />
+        <zeebe:ioMapping>
+          <zeebe:output source="=&#34;UNDER_MAINTENANCE_PROCESSING&#34;" target="requestStatus" />
+          <zeebe:output source="=action" target="action" />
+          <zeebe:output source="=if action = &#34;reassign&#34; then reassignTarget else &#34;&#34;" target="specialistUserId" />
+        </zeebe:ioMapping>
+      </bpmn:extensionElements>
+      <bpmn:incoming>flow_maint_mgr_route</bpmn:incoming>
+      <bpmn:outgoing>flow_maint_officer_to_gw</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:exclusiveGateway id="gw_maint_officer_decision" name="قرار مسؤول الصيانة">
+      <bpmn:incoming>flow_maint_officer_to_gw</bpmn:incoming>
+      <bpmn:outgoing>flow_maint_officer_execute</bpmn:outgoing>
+      <bpmn:outgoing>flow_maint_officer_reject_to_end</bpmn:outgoing>
+      <bpmn:outgoing>flow_maint_officer_reassign</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:userTask id="task_specialist_processing" name="معالجة المسؤول المختص">
+      <bpmn:extensionElements>
+        <zeebe:formDefinition formId="form_maintenance_processing" />
+        <zeebe:assignmentDefinition assignee="=if specialistUserId != null and specialistUserId != \&quot;\&quot; then specialistUserId else currentMaintenanceOfficer" />
+        <zeebe:ioMapping>
+          <zeebe:output source="=&#34;UNDER_MAINTENANCE_PROCESSING&#34;" target="requestStatus" />
+          <zeebe:output source="=action" target="action" />
+          <zeebe:output source="=if action = &#34;reassign&#34; then reassignTarget else if specialistUserId != null then specialistUserId else &#34;&#34;" target="specialistUserId" />
+        </zeebe:ioMapping>
+      </bpmn:extensionElements>
+      <bpmn:incoming>flow_maint_officer_reassign</bpmn:incoming>
+      <bpmn:incoming>flow_specialist_reassign</bpmn:incoming>
+      <bpmn:outgoing>flow_specialist_to_gw</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:exclusiveGateway id="gw_specialist_decision" name="قرار المسؤول المختص">
+      <bpmn:incoming>flow_specialist_to_gw</bpmn:incoming>
+      <bpmn:outgoing>flow_specialist_execute</bpmn:outgoing>
+      <bpmn:outgoing>flow_specialist_reject_to_end</bpmn:outgoing>
+      <bpmn:outgoing>flow_specialist_reassign</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:userTask id="task_maintenance_outcome" name="تحديد نتيجة الصيانة">
+      <bpmn:extensionElements>
+        <zeebe:formDefinition formId="form_maintenance_outcome" />
+        <zeebe:assignmentDefinition assignee="=if specialistUserId != null and specialistUserId != \&quot;\&quot; then specialistUserId else currentMaintenanceOfficer" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>flow_maint_officer_execute</bpmn:incoming>
+      <bpmn:incoming>flow_specialist_execute</bpmn:incoming>
+      <bpmn:outgoing>flow_outcome_to_report</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:serviceTask id="task_generate_maintenance_report" name="إنشاء تقرير الصيانة">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="report-generation-service" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>flow_outcome_to_report</bpmn:incoming>
+      <bpmn:outgoing>flow_report_to_final_approval</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:userTask id="task_final_approval" name="الاعتماد النهائي — رئيس قسم النقل والصيانة">
+      <bpmn:extensionElements>
+        <zeebe:formDefinition formId="form_final_approval" />
+        <zeebe:assignmentDefinition candidateGroups="transport_maintenance_section_mgr" />
+        <zeebe:ioMapping>
+          <zeebe:output source="=&#34;PENDING_FINAL_APPROVAL&#34;" target="requestStatus" />
+          <zeebe:output source="=action" target="action" />
+        </zeebe:ioMapping>
+      </bpmn:extensionElements>
+      <bpmn:incoming>flow_report_to_final_approval</bpmn:incoming>
+      <bpmn:outgoing>flow_final_approval_to_gw</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <bpmn:exclusiveGateway id="gw_final_approval_decision" name="قرار الاعتماد النهائي">
+      <bpmn:incoming>flow_final_approval_to_gw</bpmn:incoming>
+      <bpmn:outgoing>flow_final_approve</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:serviceTask id="task_generate_final_report" name="إنشاء التقرير النهائي">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="report-generation-service" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>flow_final_approve</bpmn:incoming>
+      <bpmn:outgoing>flow_final_report_to_close</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:serviceTask id="task_close_request" name="إغلاق الطلب">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="request-closure-service" />
+        <zeebe:ioMapping>
+          <zeebe:output source="=&#34;COMPLETED&#34;" target="requestStatus" />
+          <zeebe:output source="=now()" target="closedAt" />
+        </zeebe:ioMapping>
+      </bpmn:extensionElements>
+      <bpmn:incoming>flow_final_report_to_close</bpmn:incoming>
+      <bpmn:outgoing>flow_close_to_end</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:endEvent id="end_completed" name="اكتمال الطلب">
+      <bpmn:incoming>flow_close_to_end</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:endEvent id="end_rejected" name="رفض الطلب">
+      <bpmn:incoming>flow_initial_reject_to_end</bpmn:incoming>
+      <bpmn:incoming>flow_supply_reject_to_end</bpmn:incoming>
+      <bpmn:incoming>flow_maint_mgr_reject_to_end</bpmn:incoming>
+      <bpmn:incoming>flow_maint_officer_reject_to_end</bpmn:incoming>
+      <bpmn:incoming>flow_specialist_reject_to_end</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:sequenceFlow id="flow_start_to_submit" sourceRef="start_vehicle_maintenance" targetRef="task_submit_request" />
+    <bpmn:sequenceFlow id="flow_submit_to_initial_review" sourceRef="task_submit_request" targetRef="task_transport_maint_section_mgr_review" />
+    <bpmn:sequenceFlow id="flow_initial_review_to_gw" sourceRef="task_transport_maint_section_mgr_review" targetRef="gw_initial_review_decision" />
+    <bpmn:sequenceFlow id="flow_initial_approve" sourceRef="gw_initial_review_decision" targetRef="task_supply_maint_mgr_review">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= action = "approve"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_initial_reject_to_end" sourceRef="gw_initial_review_decision" targetRef="end_rejected">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= action = "reject"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_supply_review_to_gw" sourceRef="task_supply_maint_mgr_review" targetRef="gw_supply_review_decision" />
+    <bpmn:sequenceFlow id="flow_supply_approve" sourceRef="gw_supply_review_decision" targetRef="task_maintenance_mgr_review">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= action = "approve"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_supply_reject_to_end" sourceRef="gw_supply_review_decision" targetRef="end_rejected">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= action = "reject"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_maint_mgr_to_gw" sourceRef="task_maintenance_mgr_review" targetRef="gw_maint_mgr_decision" />
+    <bpmn:sequenceFlow id="flow_maint_mgr_route" sourceRef="gw_maint_mgr_decision" targetRef="task_maintenance_officer_processing">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= action = "route"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_maint_mgr_reject_to_end" sourceRef="gw_maint_mgr_decision" targetRef="end_rejected">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= action = "reject"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_maint_officer_to_gw" sourceRef="task_maintenance_officer_processing" targetRef="gw_maint_officer_decision" />
+    <bpmn:sequenceFlow id="flow_maint_officer_execute" sourceRef="gw_maint_officer_decision" targetRef="task_maintenance_outcome">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= action = "execute"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_maint_officer_reject_to_end" sourceRef="gw_maint_officer_decision" targetRef="end_rejected">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= action = "reject"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_maint_officer_reassign" sourceRef="gw_maint_officer_decision" targetRef="task_specialist_processing">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= action = "reassign"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_specialist_to_gw" sourceRef="task_specialist_processing" targetRef="gw_specialist_decision" />
+    <bpmn:sequenceFlow id="flow_specialist_execute" sourceRef="gw_specialist_decision" targetRef="task_maintenance_outcome">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= action = "execute"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_specialist_reject_to_end" sourceRef="gw_specialist_decision" targetRef="end_rejected">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= action = "reject"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_specialist_reassign" sourceRef="gw_specialist_decision" targetRef="task_specialist_processing">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= action = "reassign"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_outcome_to_report" sourceRef="task_maintenance_outcome" targetRef="task_generate_maintenance_report" />
+    <bpmn:sequenceFlow id="flow_report_to_final_approval" sourceRef="task_generate_maintenance_report" targetRef="task_final_approval" />
+    <bpmn:sequenceFlow id="flow_final_approval_to_gw" sourceRef="task_final_approval" targetRef="gw_final_approval_decision" />
+    <bpmn:sequenceFlow id="flow_final_approve" sourceRef="gw_final_approval_decision" targetRef="task_generate_final_report">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= action = "final_approve"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="flow_final_report_to_close" sourceRef="task_generate_final_report" targetRef="task_close_request" />
+    <bpmn:sequenceFlow id="flow_close_to_end" sourceRef="task_close_request" targetRef="end_completed" />
+  </bpmn:process>
+
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_VehicleMaintenanceRequest">
+      <bpmndi:BPMNShape id="start_vehicle_maintenance_di" bpmnElement="start_vehicle_maintenance">
+        <dc:Bounds x="160" y="300" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_submit_request_di" bpmnElement="task_submit_request">
+        <dc:Bounds x="250" y="278" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_transport_maint_section_mgr_review_di" bpmnElement="task_transport_maint_section_mgr_review">
+        <dc:Bounds x="430" y="278" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_initial_review_decision_di" bpmnElement="gw_initial_review_decision" isMarkerVisible="true">
+        <dc:Bounds x="610" y="293" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_supply_maint_mgr_review_di" bpmnElement="task_supply_maint_mgr_review">
+        <dc:Bounds x="720" y="278" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_supply_review_decision_di" bpmnElement="gw_supply_review_decision" isMarkerVisible="true">
+        <dc:Bounds x="900" y="293" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_maintenance_mgr_review_di" bpmnElement="task_maintenance_mgr_review">
+        <dc:Bounds x="1010" y="278" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_maint_mgr_decision_di" bpmnElement="gw_maint_mgr_decision" isMarkerVisible="true">
+        <dc:Bounds x="1190" y="293" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_maintenance_officer_processing_di" bpmnElement="task_maintenance_officer_processing">
+        <dc:Bounds x="1300" y="278" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_maint_officer_decision_di" bpmnElement="gw_maint_officer_decision" isMarkerVisible="true">
+        <dc:Bounds x="1480" y="293" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_specialist_processing_di" bpmnElement="task_specialist_processing">
+        <dc:Bounds x="1300" y="430" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_specialist_decision_di" bpmnElement="gw_specialist_decision" isMarkerVisible="true">
+        <dc:Bounds x="1480" y="445" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_maintenance_outcome_di" bpmnElement="task_maintenance_outcome">
+        <dc:Bounds x="1590" y="278" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_generate_maintenance_report_di" bpmnElement="task_generate_maintenance_report">
+        <dc:Bounds x="1770" y="278" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_final_approval_di" bpmnElement="task_final_approval">
+        <dc:Bounds x="1950" y="278" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="gw_final_approval_decision_di" bpmnElement="gw_final_approval_decision" isMarkerVisible="true">
+        <dc:Bounds x="2130" y="293" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_generate_final_report_di" bpmnElement="task_generate_final_report">
+        <dc:Bounds x="2240" y="278" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="task_close_request_di" bpmnElement="task_close_request">
+        <dc:Bounds x="2420" y="278" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_completed_di" bpmnElement="end_completed">
+        <dc:Bounds x="2600" y="300" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="end_rejected_di" bpmnElement="end_rejected">
+        <dc:Bounds x="1590" y="150" width="36" height="36" />
+      </bpmndi:BPMNShape>
+
+      <bpmndi:BPMNEdge id="flow_start_to_submit_di" bpmnElement="flow_start_to_submit">
+        <di:waypoint x="196" y="318" />
+        <di:waypoint x="250" y="318" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_submit_to_initial_review_di" bpmnElement="flow_submit_to_initial_review">
+        <di:waypoint x="370" y="318" />
+        <di:waypoint x="430" y="318" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_initial_review_to_gw_di" bpmnElement="flow_initial_review_to_gw">
+        <di:waypoint x="550" y="318" />
+        <di:waypoint x="610" y="318" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_initial_approve_di" bpmnElement="flow_initial_approve">
+        <di:waypoint x="660" y="318" />
+        <di:waypoint x="720" y="318" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_initial_reject_to_end_di" bpmnElement="flow_initial_reject_to_end">
+        <di:waypoint x="635" y="293" />
+        <di:waypoint x="635" y="168" />
+        <di:waypoint x="1590" y="168" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_supply_review_to_gw_di" bpmnElement="flow_supply_review_to_gw">
+        <di:waypoint x="840" y="318" />
+        <di:waypoint x="900" y="318" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_supply_approve_di" bpmnElement="flow_supply_approve">
+        <di:waypoint x="950" y="318" />
+        <di:waypoint x="1010" y="318" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_supply_reject_to_end_di" bpmnElement="flow_supply_reject_to_end">
+        <di:waypoint x="925" y="293" />
+        <di:waypoint x="925" y="168" />
+        <di:waypoint x="1590" y="168" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_maint_mgr_to_gw_di" bpmnElement="flow_maint_mgr_to_gw">
+        <di:waypoint x="1130" y="318" />
+        <di:waypoint x="1190" y="318" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_maint_mgr_route_di" bpmnElement="flow_maint_mgr_route">
+        <di:waypoint x="1240" y="318" />
+        <di:waypoint x="1300" y="318" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_maint_mgr_reject_to_end_di" bpmnElement="flow_maint_mgr_reject_to_end">
+        <di:waypoint x="1215" y="293" />
+        <di:waypoint x="1215" y="168" />
+        <di:waypoint x="1590" y="168" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_maint_officer_to_gw_di" bpmnElement="flow_maint_officer_to_gw">
+        <di:waypoint x="1420" y="318" />
+        <di:waypoint x="1480" y="318" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_maint_officer_execute_di" bpmnElement="flow_maint_officer_execute">
+        <di:waypoint x="1530" y="318" />
+        <di:waypoint x="1590" y="318" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_maint_officer_reject_to_end_di" bpmnElement="flow_maint_officer_reject_to_end">
+        <di:waypoint x="1505" y="293" />
+        <di:waypoint x="1505" y="168" />
+        <di:waypoint x="1590" y="168" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_maint_officer_reassign_di" bpmnElement="flow_maint_officer_reassign">
+        <di:waypoint x="1505" y="343" />
+        <di:waypoint x="1505" y="470" />
+        <di:waypoint x="1420" y="470" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_specialist_to_gw_di" bpmnElement="flow_specialist_to_gw">
+        <di:waypoint x="1420" y="470" />
+        <di:waypoint x="1480" y="470" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_specialist_execute_di" bpmnElement="flow_specialist_execute">
+        <di:waypoint x="1530" y="445" />
+        <di:waypoint x="1650" y="445" />
+        <di:waypoint x="1650" y="358" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_specialist_reject_to_end_di" bpmnElement="flow_specialist_reject_to_end">
+        <di:waypoint x="1505" y="445" />
+        <di:waypoint x="1505" y="168" />
+        <di:waypoint x="1590" y="168" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_specialist_reassign_di" bpmnElement="flow_specialist_reassign">
+        <di:waypoint x="1530" y="470" />
+        <di:waypoint x="1560" y="470" />
+        <di:waypoint x="1560" y="560" />
+        <di:waypoint x="1360" y="560" />
+        <di:waypoint x="1360" y="510" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_outcome_to_report_di" bpmnElement="flow_outcome_to_report">
+        <di:waypoint x="1710" y="318" />
+        <di:waypoint x="1770" y="318" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_report_to_final_approval_di" bpmnElement="flow_report_to_final_approval">
+        <di:waypoint x="1890" y="318" />
+        <di:waypoint x="1950" y="318" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_final_approval_to_gw_di" bpmnElement="flow_final_approval_to_gw">
+        <di:waypoint x="2070" y="318" />
+        <di:waypoint x="2130" y="318" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_final_approve_di" bpmnElement="flow_final_approve">
+        <di:waypoint x="2180" y="318" />
+        <di:waypoint x="2240" y="318" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_final_report_to_close_di" bpmnElement="flow_final_report_to_close">
+        <di:waypoint x="2360" y="318" />
+        <di:waypoint x="2420" y="318" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="flow_close_to_end_di" bpmnElement="flow_close_to_end">
+        <di:waypoint x="2540" y="318" />
+        <di:waypoint x="2600" y="318" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

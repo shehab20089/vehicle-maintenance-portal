@@ -4,6 +4,7 @@ import { useRequestStore } from '@/store/requestStore';
 import { useAuthStore } from '@/store/authStore';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { CamundaFormRenderer } from '@/components/shared/CamundaFormRenderer';
+import { ConfirmationModal } from '@/components/shared/ConfirmationModal';
 import { requestApi } from '@/lib/api';
 import { useLookups } from '@/lib/useLookups';
 import { IssueCategory, Priority, UserRole, VehicleCondition } from '@/types';
@@ -18,6 +19,7 @@ export function NewRequestPage() {
   const [formSchema, setFormSchema] = useState<CamundaFormSchema | null>(null);
   const [formVariables, setFormVariables] = useState<Record<string, unknown>>({});
   const [isFormLoading, setIsFormLoading] = useState(true);
+  const [showCompletionModal, setShowCompletionModal] = useState(false);
   const { currentUser } = useAuthStore();
   const { createRequest, performAction } = useRequestStore();
   const { lookups } = useLookups();
@@ -119,12 +121,17 @@ export function NewRequestPage() {
         throw new Error('تعذر تقديم الطلب.');
       }
 
-      navigate(`/requests/${request.id}`);
+      setShowCompletionModal(true);
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : 'تعذر إرسال الطلب.');
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleCompletionRedirect = () => {
+    setShowCompletionModal(false);
+    navigate('/dashboard', { replace: true });
   };
 
   return (
@@ -163,6 +170,18 @@ export function NewRequestPage() {
           data={{ ...lookups, ...formVariables }}
         />
       )}
+
+      <ConfirmationModal
+        isOpen={showCompletionModal}
+        onClose={handleCompletionRedirect}
+        onConfirm={handleCompletionRedirect}
+        title="تم تقديم الطلب بنجاح"
+        description="اضغط متابعة للعودة إلى الصفحة الرئيسية."
+        confirmLabel="متابعة"
+        variant="success"
+        hideCancel={true}
+        dismissible={false}
+      />
     </div>
   );
 }

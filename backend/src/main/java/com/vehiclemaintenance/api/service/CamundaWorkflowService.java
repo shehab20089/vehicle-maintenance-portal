@@ -95,6 +95,9 @@ public class CamundaWorkflowService {
 			}
 
 			Map<String, Object> variables = buildLegacyVariables(action, request, performedBy, performedByRole, notes, additionalData);
+			if ("resubmit".equals(action)) {
+				applyResubmissionResumeTarget(variables, request);
+			}
 			executeWorkflowAction(action, workflow, activeTask, variables);
 			refreshWorkflowState(requestId, workflow, getActiveTaskWithRetry(processInstanceKey));
 		} catch (Exception exception) {
@@ -133,21 +136,21 @@ public class CamundaWorkflowService {
 				return response;
 			}
 
-			BpmnProcessMetadataService.UserTaskMetadata metadata = metadataService.findByTaskName(activeTask.getName()).orElse(null);
-			String taskRole = resolveTaskRole(metadata);
+			WorkflowTaskView taskView = resolveTaskView(activeTask, request);
+			String taskRole = taskView.role();
 			response.put("task", Map.of(
 				"id", activeTask.getId(),
-				"name", activeTask.getName(),
+				"name", taskView.name(),
 				"role", taskRole,
-				"candidateGroup", metadata == null ? "" : emptyToBlank(metadata.candidateGroup()),
-				"formId", metadata == null ? "" : emptyToBlank(metadata.formId())
+				"candidateGroup", taskView.candidateGroup(),
+				"formId", taskView.formId()
 			));
 
-			if (role != null && Objects.equals(role, taskRole) && metadata != null && !metadata.formId().isBlank()) {
+			if (role != null && Objects.equals(role, taskRole) && !taskView.formId().isBlank()) {
 				response.put("form", Map.of(
-					"id", metadata.formId(),
-					"schema", resolveFormSchema(metadata.formId(), refreshedWorkflow, request),
-					"variables", resolveFormVariables(activeTask, request)
+					"id", taskView.formId(),
+					"schema", resolveFormSchema(taskView.formId(), refreshedWorkflow, request),
+					"variables", resolveFormVariables(activeTask, request, taskView.formId())
 				));
 			}
 
@@ -188,11 +191,8 @@ public class CamundaWorkflowService {
 		);
 	}
 
-	private Map<String, Object> resolveFormVariables(UserTaskDto activeTask, Map<String, Object> request) {
+	private Map<String, Object> resolveFormVariables(UserTaskDto activeTask, Map<String, Object> request, String formId) {
 		LinkedHashMap<String, Object> variables = new LinkedHashMap<>(buildBaseVariables(request));
-		String formId = metadataService.findByTaskName(activeTask.getName())
-			.map(BpmnProcessMetadataService.UserTaskMetadata::formId)
-			.orElse("");
 
 		if (camundaClient == null || activeTask == null) {
 			return applyDisplayLabels(formId, sanitizeFormVariables(formId, variables));
@@ -217,13 +217,78 @@ public class CamundaWorkflowService {
 	private Map<String, Object> applyDisplayLabels(String formId, Map<String, Object> source) {
 		LinkedHashMap<String, Object> labeled = new LinkedHashMap<>(source);
 
-		if (READONLY_DETAIL_FORM_IDS.contains(formId)) {
+		if (formId != null && !formId.isBlank()) {
 			applyLookupLabel(labeled, "region", "regions");
 			applyLookupLabel(labeled, "requestedService", "servicesTypes", "requestedServices");
+			applyPriorityLabel(labeled);
+			applyIssueCategoryLabel(labeled);
+			applyVehicleConditionLabel(labeled);
 			applyOutcomeLabel(labeled);
 		}
 
 		return labeled;
+	}
+
+	private void applyPriorityLabel(Map<String, Object> target) {
+		Object rawValue = target.get("priority");
+		if (rawValue == null || String.valueOf(rawValue).isBlank()) {
+			return;
+		}
+
+		String label = switch (String.valueOf(rawValue)) {
+			case "urgent" -> "عاجل";
+			case "high" -> "مرتفع";
+			case "medium" -> "متوسط";
+			case "low" -> "منخفض";
+			default -> "";
+		};
+
+		if (!label.isBlank()) {
+			target.put("priority", label);
+		}
+	}
+
+	private void applyIssueCategoryLabel(Map<String, Object> target) {
+		Object rawValue = target.get("issueCategory");
+		if (rawValue == null || String.valueOf(rawValue).isBlank()) {
+			return;
+		}
+
+		String label = switch (String.valueOf(rawValue)) {
+			case "engine" -> "محرك";
+			case "brakes" -> "فرامل";
+			case "electrical" -> "كهرباء";
+			case "tires" -> "إطارات";
+			case "ac" -> "تكييف";
+			case "body" -> "هيكل";
+			case "suspension" -> "تعليق";
+			case "transmission" -> "ناقل حركة";
+			case "oil_change" -> "تغيير زيت";
+			case "general" -> "عام";
+			default -> "";
+		};
+
+		if (!label.isBlank()) {
+			target.put("issueCategory", label);
+		}
+	}
+
+	private void applyVehicleConditionLabel(Map<String, Object> target) {
+		Object rawValue = target.get("currentCondition");
+		if (rawValue == null || String.valueOf(rawValue).isBlank()) {
+			return;
+		}
+
+		String label = switch (String.valueOf(rawValue)) {
+			case "operational" -> "تعمل";
+			case "partially" -> "تعمل جزئياً";
+			case "non_operational" -> "لا تعمل";
+			default -> "";
+		};
+
+		if (!label.isBlank()) {
+			target.put("currentCondition", label);
+		}
 	}
 
 	private void applyLookupLabel(Map<String, Object> target, String fieldKey, String... lookupKeys) {
@@ -359,8 +424,11 @@ public class CamundaWorkflowService {
 			}
 
 			Map<String, Object> normalizedVariables = normalizeWorkflowSubmissionVariables(variables, request);
-
-			String localAction = inferLocalAction(activeTask.getName(), normalizedVariables);
+			String effectiveTaskName = resolveTaskNameForAction(activeTask, request);
+			String localAction = inferLocalAction(effectiveTaskName, normalizedVariables);
+			if ("resubmit".equals(localAction)) {
+				applyResubmissionResumeTarget(normalizedVariables, request);
+			}
 			executeWorkflowAction(localAction, workflow, activeTask, normalizedVariables);
 			UserTaskDto nextActiveTask = getActiveTaskWithRetry(processInstanceKey);
 			refreshWorkflowState(requestId, workflow, nextActiveTask);
@@ -621,8 +689,14 @@ public class CamundaWorkflowService {
 		variables.put("issueDescription", request.getOrDefault("issueDescription", ""));
 		variables.put("priority", request.getOrDefault("priority", "medium"));
 		variables.put("notes", request.getOrDefault("notes", ""));
+		variables.put("requestNotes", request.getOrDefault("notes", ""));
 		variables.put("requestedService", request.getOrDefault("requestedService", ""));
 		variables.put("region", request.getOrDefault("region", ""));
+		variables.put("createdAt", request.getOrDefault("createdAt", ""));
+		variables.put("updatedAt", request.getOrDefault("updatedAt", ""));
+		variables.put("submittedAt", request.getOrDefault("submittedAt", ""));
+		variables.put("currentOwnerRole", request.getOrDefault("currentOwnerRole", ""));
+		variables.put("currentOwnerName", request.getOrDefault("currentOwnerName", ""));
 		variables.put("batterySize", request.getOrDefault("batterySize", ""));
 		variables.put("tireSize", request.getOrDefault("tireSize", ""));
 		variables.put("tireCount", request.getOrDefault("tireCount", ""));
@@ -650,10 +724,105 @@ public class CamundaWorkflowService {
 		copyRequestField(variables, request, "tiresChangedCount");
 		copyRequestField(variables, request, "otherActionDone");
 		copyRequestField(variables, request, "otherActionDescription");
+		copyRequestField(variables, request, "finalNotes");
 		variables.put("currentMaintenanceOfficer", request.getOrDefault("currentMaintenanceOfficerId", ""));
 		variables.put("specialistUserId", request.getOrDefault("specializedOfficerId", ""));
 		variables.put("submitterId", nestedValue(request, "requester", "employeeId"));
+		mergeMaintenanceExecutionVariables(variables, request);
+		mergeMaintenanceOutcomeVariables(variables, request);
+		mergeFinalDocumentVariables(variables, request);
 		return variables;
+	}
+
+	private void mergeMaintenanceExecutionVariables(Map<String, Object> variables, Map<String, Object> request) {
+		if (!(request.get("maintenanceExecution") instanceof Map<?, ?> executionMap)) {
+			return;
+		}
+
+		variables.put("assignedOfficerName", valueAsString(executionMap.get("assignedOfficer")));
+		variables.put("specializedOfficerName", valueAsString(executionMap.get("specializedOfficer")));
+		variables.put("startDate", valueAsString(executionMap.get("startDate")));
+		variables.put("estimatedCompletion", valueAsString(executionMap.get("estimatedCompletion")));
+		variables.put("actualCompletion", valueAsString(executionMap.get("actualCompletion")));
+		variables.put("workDescription", valueAsString(executionMap.get("workDescription")));
+		variables.put("scheduledDate", firstNonBlank(
+			valueAsString(executionMap.get("scheduledDate")),
+			String.valueOf(variables.getOrDefault("scheduledDate", ""))
+		));
+		variables.put("supplyItemsRequestedText", joinAsLines(executionMap.get("supplyItemsRequested")));
+	}
+
+	private void mergeMaintenanceOutcomeVariables(Map<String, Object> variables, Map<String, Object> request) {
+		Object outcome = request.get("maintenanceOutcome");
+		if (outcome instanceof Map<?, ?> outcomeMap) {
+			variables.put("maintenanceOutcome", firstNonBlank(outcomeMap.get("outcomeLabel"), outcomeMap.get("outcomeType")));
+			variables.put("reportNotes", valueAsString(outcomeMap.get("reportNotes")));
+			variables.put("scheduledDate", firstNonBlank(outcomeMap.get("scheduledDate"), variables.get("scheduledDate")));
+			String requestedItems = joinAsLines(outcomeMap.get("supplyItemsRequested"));
+			if (!requestedItems.isBlank()) {
+				variables.put("supplyItemsRequestedText", requestedItems);
+			}
+			return;
+		}
+
+		if (outcome != null && !String.valueOf(outcome).isBlank()) {
+			variables.put("maintenanceOutcome", outcome);
+		}
+	}
+
+	private void mergeFinalDocumentVariables(Map<String, Object> variables, Map<String, Object> request) {
+		Object finalDocuments = request.get("finalDocuments");
+		String summary = joinDocumentSummary(finalDocuments);
+		if (!summary.isBlank()) {
+			variables.put("finalDocumentsSummary", summary);
+		}
+	}
+
+	private String joinDocumentSummary(Object documents) {
+		if (!(documents instanceof List<?> documentList) || documentList.isEmpty()) {
+			return "";
+		}
+
+		List<String> lines = new ArrayList<>();
+		for (Object document : documentList) {
+			if (!(document instanceof Map<?, ?> documentMap)) {
+				continue;
+			}
+
+			String title = valueAsString(documentMap.get("title"));
+			String type = valueAsString(documentMap.get("type"));
+			String generatedAt = valueAsString(documentMap.get("generatedAt"));
+			String line = title;
+			if (!type.isBlank()) {
+				line = line.isBlank() ? type : line + " - " + type;
+			}
+			if (!generatedAt.isBlank()) {
+				line = line.isBlank() ? generatedAt : line + " - " + generatedAt;
+			}
+			if (!line.isBlank()) {
+				lines.add(line);
+			}
+		}
+
+		return String.join("\n", lines);
+	}
+
+	private String joinAsLines(Object value) {
+		if (value instanceof List<?> items) {
+			List<String> lines = new ArrayList<>();
+			for (Object item : items) {
+				if (item != null && !String.valueOf(item).isBlank()) {
+					lines.add(String.valueOf(item));
+				}
+			}
+			return String.join("\n", lines);
+		}
+
+		return value == null ? "" : String.valueOf(value);
+	}
+
+	private String valueAsString(Object value) {
+		return value == null ? "" : String.valueOf(value);
 	}
 
 	private Map<String, Object> buildLegacyVariables(
@@ -848,6 +1017,10 @@ public class CamundaWorkflowService {
 		UserTaskDto activeTask,
 		String fallbackTaskName
 	) {
+		if (activeTask != null && isReturnedToRequesterTask(activeTask, request)) {
+			return request;
+		}
+
 		String taskName = activeTask != null ? activeTask.getName() : fallbackTaskName;
 		if (taskName == null || taskName.isBlank()) {
 			return request;
@@ -997,6 +1170,68 @@ public class CamundaWorkflowService {
 			case "supply_items_requested" -> "طلب أصناف / قطع غيار";
 			default -> "اكتملت الصيانة مع تقرير";
 		};
+	}
+
+	private void applyResubmissionResumeTarget(Map<String, Object> variables, Map<String, Object> request) {
+		if (variables == null || request == null || !resolveTransferTargetGroup(variables).isBlank()) {
+			return;
+		}
+
+		String pendingReturnRole = normalizeRole(String.valueOf(
+			request.getOrDefault("pendingReturnToRole", request.getOrDefault("returnTargetRole", ""))
+		));
+		if (pendingReturnRole.isBlank()) {
+			return;
+		}
+
+		variables.put("transferTargetRole", pendingReturnRole);
+		variables.put("transferTargetGroup", denormalizeRole(pendingReturnRole));
+	}
+
+	private String resolveTaskNameForAction(UserTaskDto activeTask, Map<String, Object> request) {
+		WorkflowTaskView taskView = resolveTaskView(activeTask, request);
+		return taskView == null ? "" : taskView.name();
+	}
+
+	private WorkflowTaskView resolveTaskView(UserTaskDto activeTask, Map<String, Object> request) {
+		if (activeTask == null) {
+			return null;
+		}
+
+		if (isReturnedToRequesterTask(activeTask, request)) {
+			return new WorkflowTaskView(
+				"تعديل وإعادة تقديم الطلب",
+				"traffic_officer",
+				firstStepActor,
+				"form_edit_resubmit"
+			);
+		}
+
+		BpmnProcessMetadataService.UserTaskMetadata metadata = metadataService.findByTaskName(activeTask.getName()).orElse(null);
+		return new WorkflowTaskView(
+			activeTask.getName(),
+			resolveTaskRole(metadata),
+			metadata == null ? "" : emptyToBlank(metadata.candidateGroup()),
+			metadata == null ? "" : emptyToBlank(metadata.formId())
+		);
+	}
+
+	private boolean isReturnedToRequesterTask(UserTaskDto activeTask, Map<String, Object> request) {
+		if (activeTask == null || request == null) {
+			return false;
+		}
+
+		String pendingReturnRole = normalizeRole(String.valueOf(
+			request.getOrDefault("pendingReturnToRole", request.getOrDefault("returnTargetRole", ""))
+		));
+		if (pendingReturnRole.isBlank()) {
+			return false;
+		}
+
+		return metadataService.findByTaskName(activeTask.getName())
+			.map(metadata -> Objects.equals(firstStepActor, emptyToBlank(metadata.candidateGroup()))
+				|| "form_submit_request".equals(emptyToBlank(metadata.formId())))
+			.orElse(false);
 	}
 
 	private String extractNotes(Map<String, Object> variables) {
@@ -1178,17 +1413,7 @@ public class CamundaWorkflowService {
 	private static final Set<String> TRANSFER_ACTIONS = Set.of(
 		"return",
 		"transfer",
-		"delegate",
-		"reassign"
-	);
-
-	private static final Set<String> READONLY_DETAIL_FORM_IDS = Set.of(
-		"form_initial_review",
-		"form_supply_maint_review",
-		"form_maintenance_mgr_review",
-		"form_maintenance_processing",
-		"form_maintenance_outcome",
-		"form_final_approval"
+		"delegate"
 	);
 
 	private static final List<String> PERSISTED_WORKFLOW_FIELDS = List.of(
@@ -1227,6 +1452,9 @@ public class CamundaWorkflowService {
 		"otherActionDone",
 		"otherActionDescription"
 	);
+
+	private record WorkflowTaskView(String name, String role, String candidateGroup, String formId) {
+	}
 
 	private record ReviewSnapshot(UserTaskDto activeTask, List<?> timeline) {
 	}

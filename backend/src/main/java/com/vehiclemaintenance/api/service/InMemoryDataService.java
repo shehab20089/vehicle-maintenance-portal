@@ -852,19 +852,35 @@ public class InMemoryDataService {
 	}
 
 	private String resolveOfficerId(Map<String, Object> additionalData, Map<String, Object> request, boolean specialized) {
-		if (additionalData.get("currentMaintenanceOfficerId") != null) {
-			return String.valueOf(additionalData.get("currentMaintenanceOfficerId"));
-		}
-
-		if (additionalData.get("officerId") != null) {
-			return String.valueOf(additionalData.get("officerId"));
-		}
-
 		if (specialized) {
-			return String.valueOf(request.getOrDefault("specializedOfficerId", ""));
+			String specializedOfficerId = resolveMaintenanceOfficerId(String.valueOf(
+				additionalData.getOrDefault("specializedOfficerId", additionalData.getOrDefault("reassignTarget", ""))
+			));
+			if (!specializedOfficerId.isBlank()) {
+				return specializedOfficerId;
+			}
+
+			specializedOfficerId = resolveMaintenanceOfficerId(nestedOfficerName(additionalData, true));
+			if (!specializedOfficerId.isBlank()) {
+				return specializedOfficerId;
+			}
+
+			return resolveMaintenanceOfficerId(String.valueOf(request.getOrDefault("specializedOfficerId", "")));
 		}
 
-		return String.valueOf(request.getOrDefault("currentMaintenanceOfficerId", ""));
+		String assignedOfficerId = resolveMaintenanceOfficerId(String.valueOf(
+			additionalData.getOrDefault("currentMaintenanceOfficerId", additionalData.getOrDefault("officerId", ""))
+		));
+		if (!assignedOfficerId.isBlank()) {
+			return assignedOfficerId;
+		}
+
+		assignedOfficerId = resolveMaintenanceOfficerId(nestedOfficerName(additionalData, false));
+		if (!assignedOfficerId.isBlank()) {
+			return assignedOfficerId;
+		}
+
+		return resolveMaintenanceOfficerId(String.valueOf(request.getOrDefault("currentMaintenanceOfficerId", "")));
 	}
 
 	private String nestedOfficerName(Map<String, Object> additionalData, boolean specialized) {
@@ -915,5 +931,19 @@ public class InMemoryDataService {
 			.filter(user -> Objects.equals(user.get("name"), name))
 			.map(user -> (Map<String, Object>) sanitizeUser(user))
 			.findFirst();
+	}
+
+	private String resolveMaintenanceOfficerId(String selectedValue) {
+		if (selectedValue == null || selectedValue.isBlank()) {
+			return "";
+		}
+
+		return users.stream()
+			.filter(user -> Objects.equals(normalizeRole(String.valueOf(user.get("role"))), "maintenance_officer"))
+			.filter(user -> Objects.equals(String.valueOf(user.getOrDefault("id", "")), selectedValue)
+				|| Objects.equals(String.valueOf(user.getOrDefault("name", "")), selectedValue))
+			.map(user -> String.valueOf(user.getOrDefault("id", "")))
+			.findFirst()
+			.orElse("");
 	}
 }

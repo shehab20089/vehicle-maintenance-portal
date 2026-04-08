@@ -22,6 +22,38 @@ import {
 } from 'lucide-react';
 import { CamundaFormRenderer } from '@/components/shared/CamundaFormRenderer';
 
+function DetailPill({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border border-border/70 bg-muted/30 px-3 py-2">
+      <p className="text-[11px] font-medium text-muted-foreground">{label}</p>
+      <p className="mt-1 text-sm font-semibold text-foreground">{value}</p>
+    </div>
+  );
+}
+
+function DetailTextBlock({ label, value, tone = 'default' }: { label: string; value: string; tone?: 'default' | 'warning' | 'success' }) {
+  const toneClass = tone === 'warning'
+    ? 'border-amber-200 bg-amber-50 text-amber-900'
+    : tone === 'success'
+      ? 'border-emerald-200 bg-emerald-50 text-emerald-900'
+      : 'border-border bg-muted/40 text-foreground';
+
+  return (
+    <div>
+      <p className="mb-1.5 text-xs font-medium text-muted-foreground">{label}</p>
+      <div className={cn('rounded-lg border p-3 text-sm leading-relaxed', toneClass)}>{value}</div>
+    </div>
+  );
+}
+
+function BooleanChip({ label }: { label: string }) {
+  return (
+    <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-800">
+      {label}
+    </span>
+  );
+}
+
 function getLookupLabel(
   value: string | undefined,
   ...groups: Array<Array<{ label: string; value: string }> | undefined>
@@ -170,6 +202,7 @@ export function RequestDetailsPage() {
   const [workflowError, setWorkflowError] = useState('');
   const [isWorkflowLoading, setIsWorkflowLoading] = useState(false);
   const [isWorkflowSubmitting, setIsWorkflowSubmitting] = useState(false);
+  const [completionModal, setCompletionModal] = useState<{ title: string; description: string } | null>(null);
   const [selectedOutcome, setSelectedOutcome] = useState<MaintenanceOutcome>({
     outcomeType: OutcomeType.MAINTENANCE_COMPLETED,
     outcomeLabel: OUTCOME_TYPE_LABELS[OutcomeType.MAINTENANCE_COMPLETED],
@@ -183,6 +216,22 @@ export function RequestDetailsPage() {
   const returnReasonText = request?.status === 'returned_from_final'
     ? request.finalReturnReason || request.returnReason || ''
     : request?.returnReason || request?.finalReturnReason || '';
+  const completedExecutionFlags = [
+    request?.washingDone ? 'تم الغسيل' : null,
+    request?.batteryChanged ? 'تم تغيير البطارية' : null,
+    request?.oilChanged ? 'تم تغيير الزيت' : null,
+    request?.tiresChanged ? `تم تغيير الكفرات${request?.tiresChangedCount ? ` (${request.tiresChangedCount})` : ''}` : null,
+    request?.otherActionDone ? `أعمال أخرى${request?.otherActionDescription ? `: ${request.otherActionDescription}` : ''}` : null,
+  ].filter((item): item is string => Boolean(item));
+  const maintenanceSupplyItems = request?.maintenanceOutcome?.supplyItemsRequested
+    ?? request?.maintenanceExecution?.supplyItemsRequested
+    ?? [];
+  const workflowMetaItems = [
+    request?.workflow?.currentTaskName ? { label: 'المهمة الحالية', value: request.workflow.currentTaskName } : null,
+    workflowContext?.task?.formId ? { label: 'معرف النموذج', value: workflowContext.task.formId } : null,
+    request?.workflow?.processInstanceKey ? { label: 'معرف العملية', value: String(request.workflow.processInstanceKey) } : null,
+    request?.workflow?.startedAt ? { label: 'بدء العملية', value: formatDate(request.workflow.startedAt) } : null,
+  ].filter((item): item is { label: string; value: string } => Boolean(item));
 
   useEffect(() => {
     let cancelled = false;
@@ -360,6 +409,33 @@ export function RequestDetailsPage() {
       const refreshedContext = await requestApi.getWorkflowContext(request.id, currentUser.role);
       setWorkflowContext(refreshedContext);
       setWorkflowError('');
+
+      const submittedAction = typeof formData.action === 'string'
+        ? formData.action
+        : workflowContext?.task?.formId === 'form_edit_resubmit'
+          ? 'resubmit'
+          : workflowContext?.task?.formId === 'form_submit_request'
+            ? 'submit'
+            : '';
+
+      if (submittedAction === 'return' || submittedAction === 'submit' || submittedAction === 'resubmit') {
+        setCompletionModal(
+          submittedAction === 'return'
+            ? {
+                title: 'تم إرجاع الطلب بنجاح',
+                description: 'اضغط متابعة للعودة إلى الصفحة الرئيسية.',
+              }
+            : submittedAction === 'resubmit'
+              ? {
+                  title: 'تمت إعادة تقديم الطلب بنجاح',
+                  description: 'اضغط متابعة للعودة إلى الصفحة الرئيسية.',
+                }
+              : {
+                  title: 'تم تقديم الطلب بنجاح',
+                  description: 'اضغط متابعة للعودة إلى الصفحة الرئيسية.',
+                }
+        );
+      }
     } catch (error) {
       try {
         await loadRequests(true);
@@ -373,6 +449,11 @@ export function RequestDetailsPage() {
     } finally {
       setIsWorkflowSubmitting(false);
     }
+  };
+
+  const handleCompletionRedirect = () => {
+    setCompletionModal(null);
+    navigate('/dashboard', { replace: true });
   };
 
   const TABS: { id: ActiveTab; label: string; icon: React.ElementType; count?: number }[] = [
@@ -586,10 +667,6 @@ export function RequestDetailsPage() {
                   {request.region && (
                     <div><span className="text-muted-foreground">المنطقة / الفرع: </span><span className="font-semibold">{regionLabel}</span></div>
                   )}
-                  <div>
-                    <p className="text-muted-foreground mb-1">وصف المشكلة:</p>
-                    <p className="rounded-lg bg-muted/50 p-3 leading-relaxed">{request.issueDescription}</p>
-                  </div>
                   {request.notes && (
                     <div>
                       <p className="text-muted-foreground mb-1">ملاحظات:</p>
@@ -599,21 +676,73 @@ export function RequestDetailsPage() {
                 </div>
               </div>
 
+              {/* Request Specifics */}
+              <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
+                <div className="mb-4 flex items-center gap-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-100"><FileText className="h-4 w-4 text-violet-600" /></div>
+                  <h3 className="text-sm font-semibold text-foreground">بيانات الخدمة والملاحظات</h3>
+                </div>
+
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {requestedServiceLabel && <DetailPill label="الخدمة المطلوبة" value={requestedServiceLabel} />}
+                  {regionLabel && <DetailPill label="المنطقة / الفرع" value={regionLabel} />}
+                  {request.batterySize && <DetailPill label="مقاس البطارية" value={request.batterySize} />}
+                  {request.tireSize && <DetailPill label="مقاس الكفر" value={request.tireSize} />}
+                  {request.tireCount && <DetailPill label="عدد الكفرات المطلوبة" value={request.tireCount} />}
+                </div>
+
+                <div className="mt-4 space-y-3">
+                  {request.otherServiceDescription && (
+                    <DetailTextBlock label="وصف الخدمة الأخرى" value={request.otherServiceDescription} />
+                  )}
+                  {request.notes && (
+                    <DetailTextBlock label="ملاحظات مقدم الطلب" value={request.notes} tone="warning" />
+                  )}
+                  {request.rejectionReason && (
+                    <DetailTextBlock label="سبب الرفض" value={request.rejectionReason} tone="warning" />
+                  )}
+                  {returnReasonText && (
+                    <DetailTextBlock label="سبب الإرجاع" value={returnReasonText} tone="warning" />
+                  )}
+                  {request.finalNotes && (
+                    <DetailTextBlock label="الملاحظات النهائية" value={request.finalNotes} tone="success" />
+                  )}
+                </div>
+              </div>
+
               {/* Maintenance Execution */}
               {request.maintenanceExecution && (
                 <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
                   <h3 className="text-sm font-semibold text-foreground mb-4">تفاصيل التنفيذ</h3>
-                  <div className="grid grid-cols-2 gap-3 text-sm">
-                    <div><span className="text-muted-foreground">مسؤول الصيانة: </span><span className="font-medium">{request.maintenanceExecution.assignedOfficer}</span></div>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 text-sm">
+                    <DetailPill label="مسؤول الصيانة" value={request.maintenanceExecution.assignedOfficer} />
                     {request.maintenanceExecution.specializedOfficer && (
-                      <div><span className="text-muted-foreground">المسؤول المختص: </span><span className="font-medium text-violet-600">{request.maintenanceExecution.specializedOfficer}</span></div>
+                      <DetailPill label="المسؤول المختص" value={request.maintenanceExecution.specializedOfficer} />
                     )}
-                    {request.maintenanceExecution.startDate && <div><span className="text-muted-foreground">تاريخ البدء: </span><span>{formatDate(request.maintenanceExecution.startDate)}</span></div>}
-                    {request.maintenanceExecution.actualCompletion && <div><span className="text-muted-foreground">تاريخ الانتهاء: </span><span>{formatDate(request.maintenanceExecution.actualCompletion)}</span></div>}
+                    {request.maintenanceExecution.startDate && <DetailPill label="تاريخ البدء" value={formatDate(request.maintenanceExecution.startDate)} />}
+                    {request.maintenanceExecution.actualCompletion && <DetailPill label="تاريخ الانتهاء" value={formatDate(request.maintenanceExecution.actualCompletion)} />}
+                    {request.vehicleEntryDate && <DetailPill label="دخول المركبة للصيانة" value={formatDate(request.vehicleEntryDate)} />}
+                    {request.maintenanceAppointmentDate && <DetailPill label="موعد الصيانة" value={formatDate(request.maintenanceAppointmentDate)} />}
+                    {request.requiredItem && <DetailPill label="الصنف المطلوب" value={request.requiredItem} />}
+                    {request.itemQuantity && <DetailPill label="الكمية لكل صنف" value={request.itemQuantity} />}
+                    {request.itemRequestReceivedDate && <DetailPill label="استلام طلب الأصناف" value={formatDate(request.itemRequestReceivedDate)} />}
+                    {request.itemsReceivedDate && <DetailPill label="استلام الأصناف" value={formatDate(request.itemsReceivedDate)} />}
+                    {request.warehouseKeeper && <DetailPill label="أمين المستودع" value={request.warehouseKeeper} />}
+                    {request.warehouseSectionManager && <DetailPill label="مدير شعبة المستودعات" value={request.warehouseSectionManager} />}
+                    {request.orderNumber && <DetailPill label="رقم الأمر" value={request.orderNumber} />}
+                    {request.vehicleReceiptDate && <DetailPill label="تاريخ استلام المركبة" value={formatDate(request.vehicleReceiptDate)} />}
+                    {request.vehicleReceiverName && <DetailPill label="اسم مستلم المركبة" value={request.vehicleReceiverName} />}
                     {request.maintenanceExecution.workDescription && (
                       <div className="col-span-2">
-                        <p className="text-muted-foreground mb-1">وصف الأعمال:</p>
-                        <p className="rounded-lg bg-muted/50 p-3">{request.maintenanceExecution.workDescription}</p>
+                        <DetailTextBlock label="وصف الأعمال" value={request.maintenanceExecution.workDescription} />
+                      </div>
+                    )}
+                    {completedExecutionFlags.length > 0 && (
+                      <div className="col-span-2">
+                        <p className="mb-2 text-xs font-medium text-muted-foreground">الأعمال المنفذة</p>
+                        <div className="flex flex-wrap gap-2">
+                          {completedExecutionFlags.map((item) => <BooleanChip key={item} label={item} />)}
+                        </div>
                       </div>
                     )}
                     {request.maintenanceExecution.partsUsed && request.maintenanceExecution.partsUsed.length > 0 && (
@@ -622,6 +751,16 @@ export function RequestDetailsPage() {
                         <div className="flex flex-wrap gap-1.5">
                           {request.maintenanceExecution.partsUsed.map((part, i) => (
                             <span key={i} className="rounded-full bg-blue-50 border border-blue-200 px-2.5 py-1 text-xs text-blue-700">{part}</span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {maintenanceSupplyItems.length > 0 && (
+                      <div className="col-span-2">
+                        <p className="text-muted-foreground mb-1.5">الأصناف / قطع الغيار المطلوبة:</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {maintenanceSupplyItems.map((item, i) => (
+                            <span key={`${item}-${i}`} className="rounded-full bg-amber-50 border border-amber-200 px-2.5 py-1 text-xs text-amber-800">{item}</span>
                           ))}
                         </div>
                       </div>
@@ -668,7 +807,34 @@ export function RequestDetailsPage() {
                         </div>
                       </div>
                     )}
+                    {request.finalDocuments.length > 0 && (
+                      <div className="rounded-lg border border-teal-200 bg-white/70 px-3 py-2 text-teal-900">
+                        <span className="text-teal-600">عدد المستندات المرتبطة: </span>
+                        <span className="font-semibold">{request.finalDocuments.length}</span>
+                      </div>
+                    )}
                   </div>
+                </div>
+              )}
+
+              {/* Workflow Meta */}
+              {(workflowMetaItems.length > 0 || workflowContext?.timeline?.length) && (
+                <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
+                  <div className="mb-4 flex items-center gap-2">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-100"><Wrench className="h-4 w-4 text-sky-600" /></div>
+                    <h3 className="text-sm font-semibold text-foreground">بيانات سير العمل</h3>
+                  </div>
+                  {workflowMetaItems.length > 0 && (
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      {workflowMetaItems.map((item) => <DetailPill key={item.label} label={item.label} value={item.value} />)}
+                    </div>
+                  )}
+                  {workflowContext?.timeline && workflowContext.timeline.length > 0 && (
+                    <div className="mt-4 rounded-lg border border-border/70 bg-muted/20 p-3">
+                      <p className="mb-2 text-xs font-medium text-muted-foreground">عدد مراحل Camunda المتاحة</p>
+                      <p className="text-sm font-semibold text-foreground">{workflowContext.timeline.length}</p>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -968,6 +1134,20 @@ export function RequestDetailsPage() {
             />
           </div>
         </ConfirmationModal>
+      )}
+
+      {completionModal && (
+        <ConfirmationModal
+          isOpen={true}
+          onClose={handleCompletionRedirect}
+          onConfirm={handleCompletionRedirect}
+          title={completionModal.title}
+          description={completionModal.description}
+          confirmLabel="متابعة"
+          variant="success"
+          hideCancel={true}
+          dismissible={false}
+        />
       )}
     </div>
   );

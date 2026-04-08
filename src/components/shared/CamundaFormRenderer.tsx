@@ -45,7 +45,7 @@ function FormFieldWrapper({
 function evaluateCondition(expression: string, values: Record<string, any>): boolean {
   if (!expression) return true;
   // FEEL-like hide expressions: "=action != \"return\"", "=faultDescription = null or faultDescription = \"\""
-  let expr = expression.startsWith('=') ? expression.slice(1).trim() : expression.trim();
+  const expr = expression.startsWith('=') ? expression.slice(1).trim() : expression.trim();
 
   // Handle "or" by splitting and returning true (show) only when ALL parts are false (none hides)
   if (expr.includes(' or ')) {
@@ -103,12 +103,26 @@ function resolveValuesExpression(
     }));
 }
 
+function interpolateText(template: string | undefined, values: Record<string, unknown>): string {
+  if (!template) return '';
+
+  return template.replace(/\{\{\s*(\w+)\s*\}\}/g, (_, key: string) => {
+    const value = values[key];
+    if (value == null) return '';
+    if (Array.isArray(value)) {
+      return value.map((item) => String(item)).join('، ');
+    }
+    return String(value);
+  });
+}
+
 export function CamundaFormRenderer({ schema, onSubmit, isSubmitting, defaultValues = {}, data: externalData = {} }: CamundaFormRendererProps) {
   const { register, handleSubmit, formState: { errors }, watch, setValue } = useForm({
     defaultValues
   });
   const [uploadedFiles, setUploadedFiles] = useState<Record<string, File>>({});
   const watchedValues = watch();
+  const displayValues = { ...externalData, ...defaultValues, ...watchedValues };
 
   const handleFormSubmit = (data: any) => {
     // Merge file data if needed, or pass it directly. We'll pass filenames or file objects.
@@ -135,11 +149,12 @@ export function CamundaFormRenderer({ schema, onSubmit, isSubmitting, defaultVal
     if (comp.validate?.pattern) validationRules.pattern = { value: new RegExp(comp.validate.pattern), message: 'صيغة غير صحيحة' };
 
     switch (comp.type) {
-      case 'text':
+      case 'text': {
         // Static text/markdown display — headings and dividers
+        const resolvedText = interpolateText(comp.text, displayValues);
         return (
           <div key={comp.key} className="mb-4">
-            {comp.text?.split('\n').map((line: string, i: number) => {
+            {resolvedText.split('\n').map((line: string, i: number) => {
               if (line.startsWith('## ')) return <h2 key={i} className="text-lg font-semibold text-foreground mt-2">{line.slice(3)}</h2>;
               if (line.startsWith('# ')) return <h1 key={i} className="text-xl font-bold text-foreground mt-2">{line.slice(2)}</h1>;
               if (line.trim() === '---') return <hr key={i} className="border-border my-3" />;
@@ -147,6 +162,7 @@ export function CamundaFormRenderer({ schema, onSubmit, isSubmitting, defaultVal
             })}
           </div>
         );
+      }
 
       case 'textfield':
       case 'email':
