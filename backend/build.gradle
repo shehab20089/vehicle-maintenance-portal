@@ -14,19 +14,13 @@ java {
 	}
 }
 
-sourceSets {
-	main {
-		java {
-			srcDir 'camunda-client/camunda-client/src/main/java'
-		}
-	}
-}
-
 repositories {
+	mavenLocal()
 	mavenCentral()
 }
 
 dependencies {
+	implementation 'com.yourcompany.camunda:camunda-client:1.0.0'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'

@@ -166,7 +166,7 @@ public class CamundaWorkflowService {
 		String formId = "form_submit_request";
 		Object schema = buildFallbackFormSchema(formId, Map.of());
 
-		if (isEnabled() && camundaService != null) {
+		if (isEnabled()) {
 			try {
 				FormDto formDto = camundaService.getStartFormByProcess(processId, null).join();
 				if (formDto != null) {
@@ -517,7 +517,7 @@ public class CamundaWorkflowService {
 			return;
 		}
 
-		if (camundaClient != null && variables != null && !variables.isEmpty()) {
+		if (variables != null && !variables.isEmpty()) {
 			camundaClient.setProcessVariables(processInstanceKey, variables);
 		}
 
@@ -546,27 +546,22 @@ public class CamundaWorkflowService {
 		}
 
 		if (REJECT_ACTIONS.contains(action)) {
-			camundaService.reject(processId, firstStepActor, processVersion, activeTask.getId(), variables).join();
+			camundaService.completeUserTask(activeTask.getId(), variables).join();
 			return;
 		}
 
-		camundaService.accept(processId, firstStepActor, processVersion, activeTask.getId(), variables).join();
+		camundaService.completeUserTask(activeTask.getId(), variables).join();
 	}
 
 	private ReviewSnapshot reviewSnapshot(long processInstanceKey, String role, Map<String, Object> workflow) {
 		Integer processVersion = asInteger(workflow.get("processVersion"));
 		String candidateGroup = denormalizeRole(role);
-		var review = camundaService.review(
+		UserTaskDto activeTask = getActiveTask(processInstanceKey);
+		List<?> timeline = camundaService.getTimelineSteps(
 			processId,
 			firstStepActor,
-			String.valueOf(processInstanceKey),
-			candidateGroup == null || candidateGroup.isBlank() ? null : candidateGroup,
-			processVersion,
-			String.valueOf(workflow.getOrDefault("returnedReason", ""))
+			processVersion
 		).join();
-
-		UserTaskDto activeTask = getActiveTask(processInstanceKey);
-		List<?> timeline = review.getTimelineSteps() == null ? List.of() : review.getTimelineSteps();
 		return new ReviewSnapshot(activeTask, timeline);
 	}
 

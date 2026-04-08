@@ -9501,4 +9501,99 @@
     "outcomeType" : "maintenance_completed"
   },
   "finalReturnReason" : ""
+}, {
+  "id" : "req-080",
+  "requestNumber" : "MR-2026-3080",
+  "requester" : {
+    "name" : "محمد عبدالله الشهري",
+    "employeeId" : "EMP-1042",
+    "department" : "إدارة الحركة والمواصلات",
+    "phone" : "0102425255"
+  },
+  "vehicle" : {
+    "vehicleNumber" : "875 أ ب ج",
+    "plateNumber" : "875 أ ب ج",
+    "vehicleType" : "KHK",
+    "make" : "Toyota",
+    "model" : "T1000",
+    "year" : 2022,
+    "color" : "",
+    "currentCondition" : "operational"
+  },
+  "issueCategory" : "general",
+  "issueDescription" : "",
+  "priority" : "medium",
+  "mobileNumber" : "0102425255",
+  "vehiclePlate" : "875 أ ب ج",
+  "vehicleCategory" : "KHK",
+  "vehicleName" : "Toyota",
+  "vehicleModel" : "T1000",
+  "vehicleYear" : 2022,
+  "requestedService" : "battery_change",
+  "region" : "riyadh",
+  "batterySize" : "12",
+  "tireSize" : "",
+  "tireCount" : "",
+  "otherServiceDescription" : "",
+  "status" : "under_transport_review",
+  "currentStage" : "مراجعة شعبة النقل والصيانة",
+  "currentOwnerRole" : "transport_maintenance_director",
+  "currentOwnerName" : "خالد بن سعد القحطاني",
+  "createdAt" : "2026-04-06T22:41:04.293146500Z",
+  "updatedAt" : "2026-04-07T08:20:12.812139Z",
+  "attachments" : [ ],
+  "comments" : [ ],
+  "timeline" : [ {
+    "description" : "تم إنشاء طلب الصيانة",
+    "action" : "إنشاء الطلب",
+    "performedByRole" : "traffic_officer",
+    "performedBy" : "محمد عبدالله الشهري",
+    "id" : "tl-req-080-1",
+    "timestamp" : "2026-04-06T22:41:04.293146500Z",
+    "toStatus" : "draft"
+  }, {
+    "id" : "tl-req-080-2",
+    "action" : "تقديم الطلب",
+    "description" : "تم تنفيذ الإجراء بواسطة محمد عبدالله الشهري",
+    "performedBy" : "محمد عبدالله الشهري",
+    "performedByRole" : "traffic_officer",
+    "timestamp" : "2026-04-06T22:41:15.244447600Z",
+    "fromStatus" : "draft",
+    "toStatus" : "submitted",
+    "notes" : null
+  }, {
+    "toStatus" : "admin_notified",
+    "fromStatus" : "submitted",
+    "performedByRole" : "admin_director",
+    "description" : "تم إشعار مدير الشؤون الإدارية تلقائياً بتقديم الطلب",
+    "id" : "tl-req-080-3",
+    "timestamp" : "2026-04-06T22:41:15.244447600Z",
+    "performedBy" : "النظام",
+    "action" : "إشعار مدير الشؤون الإدارية"
+  }, {
+    "toStatus" : "under_transport_review",
+    "fromStatus" : "admin_notified",
+    "performedByRole" : "admin_director",
+    "description" : "تم تحويل الطلب تلقائياً إلى مدير شعبة النقل والصيانة",
+    "id" : "tl-req-080-4",
+    "timestamp" : "2026-04-06T22:41:15.244447600Z",
+    "performedBy" : "النظام",
+    "action" : "إحالة لمدير شعبة النقل والصيانة"
+  } ],
+  "finalDocuments" : [ ],
+  "notes" : "",
+  "workflow" : {
+    "bpmnProcessId" : "Process_VehicleMaintenanceRequest",
+    "processDefinitionKey" : 2251799813848111,
+    "processInstanceKey" : 2251799814063217,
+    "processVersion" : 10,
+    "startedAt" : "2026-04-06T22:41:04.446003700Z",
+    "completedAt" : "2026-04-06T22:41:09.866830200Z",
+    "currentTaskId" : "2251799814063320",
+    "currentTaskName" : "مراجعة رئيس قسم النقل والصيانة",
+    "currentTaskGroup" : "transport_maintenance_section_mgr",
+    "currentTaskRole" : "transport_maintenance_director",
+    "currentFormId" : "form_initial_review"
+  },
+  "submittedAt" : "2026-04-06T22:41:15.244447600Z"
 } ]
