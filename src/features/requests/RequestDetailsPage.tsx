@@ -1,7 +1,10 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useRequestStore } from '@/store/requestStore';
 import { useAuthStore } from '@/store/authStore';
+import { OfficialCamundaFormViewer } from '@/components/shared/OfficialCamundaFormViewer';
+import { CamundaFormRenderer } from '@/components/shared/CamundaFormRenderer';
+import type { CamundaFormSchema } from '@/types/camunda';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { PriorityBadge } from '@/components/shared/PriorityBadge';
 import { Timeline } from '@/components/shared/Timeline';
@@ -17,8 +20,38 @@ import { cn } from '@/lib/utils';
 import {
   Car, User, Wrench, FileText, MessageSquare, Send, CheckCircle, XCircle,
   RotateCcw, Play, Flag, ArrowRightLeft, AlertCircle, Paperclip, ChevronLeft,
-  Bell, Star, Package, Calendar,
+  Bell, Star, Package, Calendar, Layers,
 } from 'lucide-react';
+
+// ─── Actual Camunda Form Schema (from Camunda workflow) ────────────────────
+const DEMO_CAMUNDA_SCHEMA: CamundaFormSchema = {
+  executionPlatform: 'Camunda Cloud',
+  executionPlatformVersion: '8.7.0',
+  exporter: { name: 'Camunda Web Modeler', version: 'a0293e6' },
+  schemaVersion: 18,
+  id: 'Form_0nog1ps',
+  components: [
+    {
+      id: 'Field_0aawab9',
+      key: 'textarea_dm5l4',
+      type: 'textarea',
+      label: 'Reason',
+      layout: { row: 'Row_06nmr5f', columns: null },
+      validate: { required: true, minLength: '20', maxLength: '500' },
+      properties: { labelEn: 'Reason', labelAr: 'السبب' },
+    },
+    {
+      id: 'Field_0ui9ubd',
+      key: 'filepicker_szirtj',
+      type: 'filepicker',
+      label: 'Upload File',
+      layout: { row: 'Row_1ovdgab', columns: null },
+      validate: { required: true },
+      properties: { labelEn: 'Upload Document', labelAr: 'تحميل المستند' },
+    },
+  ],
+  type:'default'
+};
 
 const ACTION_ICONS: Record<string, React.ElementType> = {
   transport_approve: CheckCircle,
@@ -66,7 +99,7 @@ const ACTION_STYLES: Record<string, string> = {
   specialized_reject: 'bg-red-600 hover:bg-red-700 text-white',
 };
 
-type ActiveTab = 'details' | 'timeline' | 'comments' | 'documents';
+type ActiveTab = 'details' | 'timeline' | 'comments' | 'documents' | 'camunda_forms';
 
 export function RequestDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -81,6 +114,7 @@ export function RequestDetailsPage() {
   const [specializedOfficerName, setSpecializedOfficerName] = useState('');
   const [commentText, setCommentText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [camundaFormType, setCamundaFormType] = useState<'official' | 'custom'>('custom');
   // Final outcome selection
   const [selectedOutcome, setSelectedOutcome] = useState<MaintenanceOutcome>({
     outcomeType: OutcomeType.MAINTENANCE_COMPLETED,
@@ -149,11 +183,18 @@ export function RequestDetailsPage() {
     setCommentText('');
   };
 
+  // Camunda form submit handler (demo)
+  const handleCamundaFormSubmit = useCallback((data: any) => {
+    console.log('✅ Camunda Form Submitted:', data);
+    alert('تم إرسال النموذج بنجاح!\n\n' + JSON.stringify(data, null, 2));
+  }, []);
+
   const TABS: { id: ActiveTab; label: string; icon: React.ElementType; count?: number }[] = [
     { id: 'details', label: 'التفاصيل', icon: FileText },
     { id: 'timeline', label: 'سجل النشاط', icon: Wrench, count: request.timeline.length },
     { id: 'comments', label: 'التعليقات', icon: MessageSquare, count: request.comments.length },
     { id: 'documents', label: 'المستندات', icon: Paperclip, count: request.finalDocuments.length },
+    { id: 'camunda_forms', label: 'نماذج Camunda', icon: Layers },
   ];
 
   return (
@@ -474,6 +515,84 @@ export function RequestDetailsPage() {
                   ))}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Camunda Forms Demo Tab */}
+          {activeTab === 'camunda_forms' && (
+            <div className="space-y-5">
+              {/* Info banner */}
+              <div className="flex items-start gap-3 rounded-xl border border-blue-200 bg-blue-50 p-4">
+                <Layers className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-sm font-semibold text-blue-800">عرض توضيحي — نماذج Camunda الديناميكية</p>
+                  <p className="text-xs text-blue-600 mt-1 leading-relaxed">
+                    يوجد أسلوبان لعرض نماذج Camunda في النظام. استخدم المفتاح أدناه للتبديل بينهما:
+                  </p>
+                  <ul className="text-xs text-blue-700 mt-2 space-y-1 list-disc list-inside">
+                    <li><strong>المعالج المخصص (CamundaFormRenderer)</strong> — مبني بـ React + React Hook Form، يدعم RTL بالكامل مع تحكم كامل بالتصميم.</li>
+                    <li><strong>العارض الرسمي (OfficialCamundaFormViewer)</strong> — يستخدم مكتبة <code className="bg-blue-100 px-1 rounded">@bpmn-io/form-js</code> الرسمية من Camunda مباشرة.</li>
+                  </ul>
+                </div>
+              </div>
+
+              {/* Toggle Switch */}
+              <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-semibold text-foreground">طريقة العرض:</span>
+                  <div className="flex rounded-lg border border-border overflow-hidden">
+                    <button
+                      onClick={() => setCamundaFormType('custom')}
+                      className={cn(
+                        'px-4 py-2 text-xs font-semibold transition-all',
+                        camundaFormType === 'custom'
+                          ? 'bg-primary text-white'
+                          : 'bg-muted/30 text-muted-foreground hover:text-foreground'
+                      )}
+                    >
+                      المعالج المخصص (React)
+                    </button>
+                    <button
+                      onClick={() => setCamundaFormType('official')}
+                      className={cn(
+                        'px-4 py-2 text-xs font-semibold transition-all',
+                        camundaFormType === 'official'
+                          ? 'bg-primary text-white'
+                          : 'bg-muted/30 text-muted-foreground hover:text-foreground'
+                      )}
+                    >
+                      العارض الرسمي (@bpmn-io/form-js)
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Render the selected form type */}
+              {camundaFormType === 'custom' ? (
+                <CamundaFormRenderer
+                  schema={DEMO_CAMUNDA_SCHEMA}
+                  onSubmit={handleCamundaFormSubmit}
+                  isSubmitting={false}
+                />
+              ) : (
+                <OfficialCamundaFormViewer
+                  schema={DEMO_CAMUNDA_SCHEMA}
+                  onSubmit={handleCamundaFormSubmit}
+                />
+              )}
+
+              {/* Schema preview */}
+              <details className="rounded-xl border border-border bg-card shadow-sm">
+                <summary className="cursor-pointer px-5 py-3 text-sm font-semibold text-foreground hover:bg-muted/30 transition-colors rounded-xl">
+                  عرض مخطط النموذج (JSON Schema)
+                </summary>
+                <pre
+                  dir="ltr"
+                  className="p-5 text-xs font-mono text-muted-foreground overflow-x-auto border-t border-border bg-muted/20 rounded-b-xl max-h-[400px]"
+                >
+                  {JSON.stringify(DEMO_CAMUNDA_SCHEMA, null, 2)}
+                </pre>
+              </details>
             </div>
           )}
         </div>

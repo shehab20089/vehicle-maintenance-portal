@@ -22,6 +22,7 @@ export function OfficialCamundaFormViewer({ schema, onSubmit, data = {} }: Offic
     });
 
     formInstanceRef.current = form;
+console.log(schema);
 
     // Load schema and default data
     form.importSchema(schema, data).catch((err: any) => {
