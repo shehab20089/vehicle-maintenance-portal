@@ -31,7 +31,7 @@ export function WorkflowStepper({ currentStatus, className }: WorkflowStepperPro
                     isDone && 'border-primary bg-primary text-white',
                     isCurrent && !isCurrentRejected && 'border-primary bg-primary text-white shadow-[var(--shadow-float)]',
                     isCurrentRejected && 'border-red-500 bg-red-500 text-white',
-                    !isDone && !isCurrent && 'border-border bg-card text-muted-foreground'
+                    !isDone && !isCurrent && 'border-slate-200 bg-card text-muted-foreground'
                   )}
                 >
                   {isDone ? (
@@ -60,7 +60,7 @@ export function WorkflowStepper({ currentStatus, className }: WorkflowStepperPro
                 <div
                   className={cn(
                     'mx-1.5 h-0.5 w-10 flex-shrink-0',
-                    idx < currentIdx ? 'bg-primary/60' : 'bg-border'
+                    idx < currentIdx ? 'bg-primary/60' : 'bg-slate-200'
                   )}
                 />
               )}

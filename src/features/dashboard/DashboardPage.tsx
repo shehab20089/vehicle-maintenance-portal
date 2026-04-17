@@ -132,7 +132,7 @@ export function DashboardPage() {
                 placeholder="بحث..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-40 rounded-2xl border border-input bg-input-surface px-3 py-2 text-xs placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/20"
+                className="w-40 rounded-2xl border border-[#E5E7EB] bg-input-surface px-3 py-2 text-xs placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/20"
               />
               <button
                 onClick={() => navigate('/requests')}
@@ -154,7 +154,7 @@ export function DashboardPage() {
             ) : (
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-border bg-input-surface">
+                  <tr className="border-t border-b border-[#E5E7EB] bg-input-surface">
                     <th className="px-4 py-3 text-right text-xs font-semibold text-muted-foreground">رقم الطلب</th>
                     <th className="px-4 py-3 text-right text-xs font-semibold text-muted-foreground">المركبة</th>
                     <th className="px-4 py-3 text-right text-xs font-semibold text-muted-foreground">الأولوية</th>

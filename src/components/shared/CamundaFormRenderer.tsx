@@ -55,13 +55,13 @@ export function CamundaFormRenderer({ schema, onSubmit, isSubmitting, defaultVal
     onSubmit(finalData);
   };
 
-  const inputClass = 'w-full rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all disabled:opacity-50 disabled:cursor-not-allowed';
+  const inputClass = 'w-full rounded-lg border border-[#E5E7EB] bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all disabled:opacity-50 disabled:cursor-not-allowed';
 
   const renderComponent = (comp: CamundaFormComponent) => {
     // Get Arabic label if available, fallback to English or default label
     const label = comp.properties?.labelAr || comp.properties?.labelEn || comp.label;
     const isRequired = comp.validate?.required === true;
-    
+
     // Convert validation rules to React Hook Form format
     const validationRules: any = { required: isRequired ? 'هذا الحقل مطلوب' : false };
     if (comp.validate?.minLength) validationRules.minLength = { value: Number(comp.validate.minLength), message: `يجب أن يكون ${comp.validate.minLength} حرفاً على الأقل` };
@@ -87,7 +87,7 @@ export function CamundaFormRenderer({ schema, onSubmit, isSubmitting, defaultVal
             />
           </FormFieldWrapper>
         );
-      
+
       case 'textarea':
         return (
           <FormFieldWrapper key={comp.key} label={label} required={isRequired} error={errors[comp.key]} helper={comp.description}>
@@ -123,7 +123,7 @@ export function CamundaFormRenderer({ schema, onSubmit, isSubmitting, defaultVal
           <FormFieldWrapper key={comp.key} label={label} required={isRequired && !file} error={errors[comp.key]} helper={comp.description}>
             {!file ? (
               <div className="flex items-center justify-center w-full">
-                <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-input rounded-lg cursor-pointer bg-muted/20 hover:bg-muted/50 transition-colors">
+                <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-[#E5E7EB] rounded-lg cursor-pointer bg-muted/20 hover:bg-muted/50 transition-colors">
                   <div className="flex flex-col items-center justify-center pt-5 pb-6">
                     <Upload className="w-8 h-8 mb-2 text-muted-foreground" />
                     <p className="mb-2 text-sm text-foreground"><span className="font-semibold">اضغط للرفع</span> أو اسحب الملف هنا</p>
@@ -189,7 +189,7 @@ export function CamundaFormRenderer({ schema, onSubmit, isSubmitting, defaultVal
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
       <div className="surface-card p-5">
         <h3 className="mb-4 border-b border-border pb-3 text-lg font-semibold text-foreground">إكمال المهمة</h3>
-        
+
         <div className="grid grid-cols-1 gap-x-6 gap-y-2 lg:grid-cols-2">
           {schema.components.map(comp => (
             <div key={comp.key} className={comp.type === 'textarea' || comp.type === 'file' ? 'lg:col-span-2' : 'col-span-1'}>

@@ -185,7 +185,12 @@ export function NewRequestPage() {
                   </span>
                 </div>
                 {idx < STEPS.length - 1 && (
-                  <div className={cn('h-0.5 w-10 flex-shrink-0 mx-1', idx < step - 1 ? 'bg-primary/60' : 'bg-border')} />
+                  <div
+                    className={cn(
+                      'mx-2 h-[2px] w-12 flex-shrink-0 rounded-full transition-colors',
+                      idx < step - 1 ? 'bg-primary/55' : 'bg-slate-200'
+                    )}
+                  />
                 )}
               </div>
             );
