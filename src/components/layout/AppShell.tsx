@@ -14,8 +14,8 @@ export function AppShell() {
       {/* Main */}
       <div className="flex flex-1 flex-col overflow-hidden">
         <Topbar onMenuClick={() => setSidebarCollapsed((c) => !c)} />
-        <main className="flex-1 overflow-y-auto">
-          <div className="px-6 py-6">
+        <main className="flex-1 overflow-y-auto bg-background">
+          <div className="mx-auto max-w-[1440px] px-6 py-8">
             <Outlet />
           </div>
         </main>

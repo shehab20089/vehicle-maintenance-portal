@@ -36,36 +36,36 @@ export function DashboardPage() {
       title: 'إجمالي الطلبات',
       value: stats.total,
       icon: ClipboardList,
-      colorClass: 'text-primary',
-      bgClass: 'bg-primary/10',
+      colorClass: 'text-primary-icon',
+      bgClass: 'bg-primary-soft',
     },
     {
       title: 'بانتظار إجراء مني',
       value: stats.pendingMyAction,
       icon: Clock,
-      colorClass: 'text-amber-600',
-      bgClass: 'bg-amber-50',
+      colorClass: 'text-primary-dark',
+      bgClass: 'bg-secondary',
     },
     {
       title: 'الطلبات المعادة',
       value: stats.returned,
       icon: RotateCcw,
-      colorClass: 'text-orange-600',
-      bgClass: 'bg-orange-50',
+      colorClass: 'text-status-returned',
+      bgClass: 'bg-status-returned-bg',
     },
     {
       title: 'تحت الصيانة',
       value: stats.inMaintenance,
       icon: Wrench,
-      colorClass: 'text-blue-600',
-      bgClass: 'bg-blue-50',
+      colorClass: 'text-primary-icon',
+      bgClass: 'bg-primary-soft',
     },
     {
       title: 'المكتملة',
       value: stats.completed,
       icon: CheckCircle,
-      colorClass: 'text-emerald-600',
-      bgClass: 'bg-emerald-50',
+      colorClass: 'text-status-completed',
+      bgClass: 'bg-status-completed-bg',
     },
     {
       title: 'المرفوضة',
@@ -83,19 +83,23 @@ export function DashboardPage() {
     .slice(0, 7);
 
   return (
-    <div className="space-y-6 max-w-[1400px]">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">لوحة التحكم</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            مرحباً، <span className="font-medium text-foreground">{currentUser?.name}</span> — نظرة عامة على طلبات الصيانة
+    <div className="max-w-[1400px] space-y-6">
+      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div className="space-y-1 text-right">
+          {currentUser?.name && (
+            <p className="text-sm font-medium text-primary-dark">
+              مرحباً، {currentUser.name}
+            </p>
+          )}
+          <h1 className="text-2xl font-bold text-foreground md:text-[1.9rem]">لوحة التحكم</h1>
+          <p className="text-sm text-muted-foreground">
+            ملخص الطلبات الحالية وآخر النشاطات في نظام المركبات.
           </p>
         </div>
         {currentUser?.role === UserRole.TRAFFIC_OFFICER && (
           <button
             onClick={() => navigate('/requests/new')}
-            className="flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-primary/20 hover:bg-primary/90 transition-all"
+            className="flex items-center gap-2 self-start rounded-2xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-[var(--shadow-soft)] transition-all hover:bg-primary-dark md:self-auto"
           >
             <Plus className="h-4 w-4" />
             طلب صيانة جديد
@@ -103,8 +107,7 @@ export function DashboardPage() {
         )}
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
         {kpiCards.map((card) => (
           <KPICard
             key={card.title}
@@ -120,9 +123,8 @@ export function DashboardPage() {
 
       {/* Main Grid */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Requests Table - Takes 2/3 */}
-        <div className="lg:col-span-2 rounded-xl border border-border bg-card shadow-sm overflow-hidden">
-          <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-4">
+        <div className="lg:col-span-2 surface-card overflow-hidden">
+          <div className="flex items-center justify-between gap-3 border-b border-border/70 px-5 py-4">
             <h2 className="text-sm font-semibold text-foreground">أحدث الطلبات</h2>
             <div className="flex items-center gap-2">
               <input
@@ -130,7 +132,7 @@ export function DashboardPage() {
                 placeholder="بحث..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="rounded-lg border border-input bg-background px-3 py-1.5 text-xs placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring w-36"
+                className="w-40 rounded-2xl border border-input bg-input-surface px-3 py-2 text-xs placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/20"
               />
               <button
                 onClick={() => navigate('/requests')}
@@ -152,7 +154,7 @@ export function DashboardPage() {
             ) : (
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-border bg-muted/30">
+                  <tr className="border-b border-border bg-input-surface">
                     <th className="px-4 py-3 text-right text-xs font-semibold text-muted-foreground">رقم الطلب</th>
                     <th className="px-4 py-3 text-right text-xs font-semibold text-muted-foreground">المركبة</th>
                     <th className="px-4 py-3 text-right text-xs font-semibold text-muted-foreground">الأولوية</th>
@@ -162,10 +164,10 @@ export function DashboardPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {recentRequests.map((req, idx) => (
+                  {recentRequests.map((req) => (
                     <tr
                       key={req.id}
-                      className="border-b border-border/50 last:border-0 hover:bg-muted/30 transition-colors"
+                      className="border-b border-border/50 last:border-0 hover:bg-sidebar-active transition-colors"
                     >
                       <td className="px-4 py-3">
                         <span className="font-mono text-xs font-semibold text-primary">{req.requestNumber}</span>
@@ -202,9 +204,8 @@ export function DashboardPage() {
           </div>
         </div>
 
-        {/* Recent Activity - Takes 1/3 */}
-        <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
-          <div className="border-b border-border px-5 py-4">
+        <div className="surface-card overflow-hidden">
+          <div className="border-b border-border/70 px-5 py-4">
             <h2 className="text-sm font-semibold text-foreground">آخر النشاطات</h2>
           </div>
           <div className="divide-y divide-border/50 max-h-[480px] overflow-y-auto">
@@ -215,7 +216,7 @@ export function DashboardPage() {
                 <button
                   key={activity.id}
                   onClick={() => navigate(`/requests/${activity.requestId}`)}
-                  className="flex w-full items-start gap-3 px-4 py-3 text-right hover:bg-muted/30 transition-colors"
+                  className="flex w-full items-start gap-3 px-4 py-3 text-right hover:bg-sidebar-active transition-colors"
                 >
                   <div className="mt-0.5 h-2 w-2 flex-shrink-0 rounded-full bg-primary/60" />
                   <div className="flex-1 min-w-0">

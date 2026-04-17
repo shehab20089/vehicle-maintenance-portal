@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { AlertTriangle, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -17,16 +16,16 @@ interface ConfirmationModalProps {
 
 const variantStyles = {
   danger: {
-    icon: 'bg-red-100 text-red-600',
-    button: 'bg-red-600 hover:bg-red-700 text-white',
+    icon: 'bg-status-rejected-bg text-status-rejected',
+    button: 'bg-status-rejected text-white hover:brightness-95',
   },
   warning: {
-    icon: 'bg-amber-100 text-amber-600',
-    button: 'bg-amber-600 hover:bg-amber-700 text-white',
+    icon: 'bg-status-returned-bg text-status-returned',
+    button: 'bg-status-returned text-white hover:brightness-95',
   },
   primary: {
-    icon: 'bg-blue-100 text-blue-600',
-    button: 'bg-primary hover:bg-primary/90 text-white',
+    icon: 'bg-primary-soft text-primary-icon',
+    button: 'bg-primary text-white hover:bg-primary-dark',
   },
 };
 
@@ -55,7 +54,7 @@ export function ConfirmationModal({
       />
 
       {/* Modal */}
-      <div className="relative z-10 w-full max-w-md rounded-2xl bg-card shadow-2xl border border-border">
+      <div className="surface-card relative z-10 w-full max-w-md border p-0 shadow-[var(--shadow-float)]">
         {/* Header */}
         <div className="flex items-start justify-between p-6 pb-0">
           <div className="flex items-start gap-3">
@@ -69,7 +68,7 @@ export function ConfirmationModal({
           </div>
           <button
             onClick={onClose}
-            className="flex-shrink-0 rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+            className="flex-shrink-0 rounded-xl p-1.5 text-muted-foreground transition-colors hover:bg-sidebar-active hover:text-foreground"
           >
             <X className="h-4 w-4" />
           </button>
@@ -86,7 +85,7 @@ export function ConfirmationModal({
             onClick={onConfirm}
             disabled={isLoading}
             className={cn(
-              'flex-1 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50',
+              'flex-1 rounded-2xl px-4 py-2.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/20 disabled:opacity-50',
               styles.button
             )}
           >
@@ -95,7 +94,7 @@ export function ConfirmationModal({
           <button
             onClick={onClose}
             disabled={isLoading}
-            className="flex-1 rounded-lg border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground hover:bg-muted transition-colors"
+            className="flex-1 rounded-2xl border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-sidebar-active"
           >
             {cancelLabel}
           </button>

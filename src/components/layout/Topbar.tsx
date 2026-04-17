@@ -9,12 +9,12 @@ import { cn } from '@/lib/utils';
 import { useState } from 'react';
 
 const roleColors: Record<UserRole, string> = {
-  traffic_officer: 'bg-blue-500',
-  admin_director: 'bg-purple-500',
-  transport_maintenance_director: 'bg-orange-500',
-  supply_maintenance_director: 'bg-cyan-500',
-  maintenance_director: 'bg-teal-500',
-  maintenance_officer: 'bg-green-500',
+  traffic_officer: 'bg-primary',
+  admin_director: 'bg-primary-dark',
+  transport_maintenance_director: 'bg-[#4E8A71]',
+  supply_maintenance_director: 'bg-[#5C9E83]',
+  maintenance_director: 'bg-primary-icon',
+  maintenance_officer: 'bg-[#2F7A5B]',
 };
 
 interface TopbarProps {
@@ -31,12 +31,12 @@ export function Topbar({ onMenuClick }: TopbarProps) {
   const initials = currentUser.name.split(' ').slice(0, 2).map((w) => w[0]).join('');
 
   return (
-    <header className="flex h-14 items-center justify-between gap-4 border-b border-border bg-card px-4 shadow-sm">
+    <header className="flex h-16 items-center justify-between gap-4 border-b border-sidebar-border bg-card/95 px-4 shadow-[var(--shadow-soft)]">
       {/* Right: Menu + Title */}
       <div className="flex items-center gap-3">
         <button
           onClick={onMenuClick}
-          className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          className="flex h-10 w-10 items-center justify-center rounded-2xl text-muted-foreground hover:bg-primary-soft hover:text-primary-dark transition-colors"
         >
           <Menu className="h-4.5 w-4.5" />
         </button>
@@ -48,7 +48,7 @@ export function Topbar({ onMenuClick }: TopbarProps) {
         <div className="relative">
           <button
             onClick={() => setShowRoleSwitcher((prev) => !prev)}
-            className="flex items-center gap-2 rounded-lg border border-border bg-muted/50 px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted transition-colors"
+            className="flex items-center gap-2 rounded-2xl border border-sidebar-border bg-card px-3 py-2 text-xs font-semibold text-foreground hover:bg-primary-soft transition-colors"
           >
             <span className="hidden sm:inline">التبديل بين الأدوار</span>
             <span className={cn('h-2 w-2 rounded-full', roleColors[currentUser.role])} />
@@ -59,8 +59,8 @@ export function Topbar({ onMenuClick }: TopbarProps) {
           {showRoleSwitcher && (
             <>
               <div className="fixed inset-0 z-40" onClick={() => setShowRoleSwitcher(false)} />
-              <div className="absolute left-0 top-full z-50 mt-1 w-72 overflow-hidden rounded-xl border border-border bg-card shadow-xl">
-                <div className="border-b border-border px-4 py-3">
+              <div className="absolute left-0 top-full z-50 mt-2 w-72 overflow-hidden rounded-[1.5rem] border border-sidebar-border bg-card shadow-[var(--shadow-float)]">
+                <div className="border-b border-sidebar-border px-4 py-3">
                   <p className="text-xs font-semibold text-muted-foreground">تبديل دور المستخدم (وضع العرض التجريبي)</p>
                 </div>
                 <div className="p-1.5 space-y-0.5">
@@ -69,10 +69,10 @@ export function Topbar({ onMenuClick }: TopbarProps) {
                       key={user.id}
                       onClick={() => { switchRole(user.role); setShowRoleSwitcher(false); }}
                       className={cn(
-                        'flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-right transition-colors',
+                        'flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-right transition-colors',
                         currentUser.role === user.role
-                          ? 'bg-primary/10 text-primary'
-                          : 'hover:bg-muted text-foreground'
+                          ? 'bg-primary-soft text-primary-dark'
+                          : 'hover:bg-sidebar-active text-foreground'
                       )}
                     >
                       <div className={cn('h-8 w-8 flex-shrink-0 rounded-full flex items-center justify-center text-white text-xs font-bold', roleColors[user.role])}>
@@ -96,7 +96,7 @@ export function Topbar({ onMenuClick }: TopbarProps) {
         {/* Notifications */}
         <Link
           to="/notifications"
-          className="relative flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          className="relative flex h-10 w-10 items-center justify-center rounded-2xl text-muted-foreground hover:bg-primary-soft hover:text-primary-dark transition-colors"
         >
           <Bell className="h-4.5 w-4.5" />
           {unreadCount > 0 && (

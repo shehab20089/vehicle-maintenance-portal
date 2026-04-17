@@ -25,26 +25,22 @@ export function KPICard({
   return (
     <div
       className={cn(
-        'relative overflow-hidden rounded-xl border border-border bg-card p-5 shadow-sm transition-all',
-        onClick && 'cursor-pointer hover:shadow-md hover:-translate-y-0.5',
+        'surface-card surface-card-hover flex min-h-[10rem] flex-col items-center justify-center px-4 py-5 text-center',
+        onClick && 'cursor-pointer',
         className
       )}
       onClick={onClick}
     >
-      <div className="flex items-start justify-between">
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-muted-foreground truncate">{title}</p>
-          <p className={cn('mt-1.5 text-3xl font-bold tabular-nums', colorClass)}>{value}</p>
-          {trend && (
-            <p className="mt-1 text-xs text-muted-foreground">{trend.label}</p>
-          )}
-        </div>
-        <div className={cn('flex-shrink-0 rounded-xl p-3', bgClass)}>
-          <Icon className={cn('h-6 w-6', colorClass)} />
-        </div>
+      <div className={cn('icon-chip mb-4 size-12 rounded-[1rem]', bgClass)}>
+        <Icon className={cn('h-5 w-5', colorClass)} />
       </div>
-      {/* Decorative gradient */}
-      <div className={cn('absolute bottom-0 right-0 h-16 w-16 rounded-full opacity-5 blur-2xl', bgClass)} />
+      <p className="font-mono text-[1.55rem] font-bold leading-none tracking-tight text-primary-dark tabular-nums">
+        {value}
+      </p>
+      <p className="mt-3 max-w-[10ch] text-[0.95rem] font-bold leading-[1.7] text-foreground md:text-[1rem]">{title}</p>
+      {trend && (
+        <p className="mt-2 text-xs text-muted-foreground">{trend.label}</p>
+      )}
     </div>
   );
 }

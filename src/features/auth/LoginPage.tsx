@@ -37,20 +37,18 @@ export function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 flex flex-col items-center justify-center p-4">
-      {/* Card */}
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {/* Logo Header */}
-        <div className="mb-8 text-center">
-          <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-primary shadow-xl shadow-primary/30 mb-4">
-            <Car className="h-8 w-8 text-white" />
+        <div className="mb-10 flex flex-col items-center text-center">
+          <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-[1.75rem] bg-primary-soft">
+            <Car className="h-9 w-9 text-primary-icon" />
           </div>
           <h1 className="text-2xl font-bold text-foreground">بوابة صيانة المركبات</h1>
-          <p className="mt-1 text-sm text-muted-foreground">نظام إدارة طلبات الصيانة الداخلي</p>
+          <p className="mt-2 text-sm text-muted-foreground">اختر الخدمة التي تريد الوصول إليها</p>
+          <div className="accent-line mt-5" />
         </div>
 
-        {/* Form Card */}
-        <div className="rounded-2xl border border-border bg-card shadow-xl p-8">
+        <div className="surface-card p-8">
           <h2 className="mb-6 text-lg font-bold text-foreground">تسجيل الدخول</h2>
 
           <form onSubmit={handleSubmit} noValidate className="space-y-5">
@@ -66,7 +64,7 @@ export function LoginPage() {
                 onChange={(e) => setEmployeeId(e.target.value)}
                 placeholder="مثال: EMP-1042"
                 required
-                className="w-full rounded-lg border border-input bg-background px-4 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
+                className="w-full rounded-2xl border border-input bg-input-surface px-4 py-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-primary transition-all"
               />
             </div>
 
@@ -83,7 +81,7 @@ export function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="أدخل كلمة المرور"
                   required
-                  className="w-full rounded-lg border border-input bg-background px-4 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
+                  className="w-full rounded-2xl border border-input bg-input-surface px-4 py-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-primary transition-all"
                 />
                 <button
                   type="button"
@@ -107,7 +105,7 @@ export function LoginPage() {
             <button
               type="submit"
               disabled={isLoading || !employeeId || !password}
-              className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-primary/20 hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-4 py-3 text-sm font-semibold text-white shadow-[var(--shadow-soft)] hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-ring/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
@@ -125,8 +123,7 @@ export function LoginPage() {
           </form>
         </div>
 
-        {/* Demo Accounts */}
-        <div className="mt-4 rounded-xl border border-border bg-card/60 p-4">
+        <div className="mt-5 rounded-[1.5rem] border border-border bg-card p-4 shadow-[var(--shadow-soft)]">
           <p className="mb-3 text-xs font-semibold text-muted-foreground text-center">حسابات العرض التجريبي (كلمة المرور: 123456)</p>
           <div className="grid grid-cols-1 gap-1.5">
             {DEMO_ACCOUNTS.map((acc) => (
@@ -134,7 +131,7 @@ export function LoginPage() {
                 key={acc.id}
                 type="button"
                 onClick={() => { setEmployeeId(acc.id); setPassword('123456'); }}
-                className="flex items-center justify-between rounded-lg px-3 py-2 text-xs font-medium bg-muted/50 hover:bg-muted text-foreground transition-colors"
+                className="flex items-center justify-between rounded-2xl border border-transparent px-3 py-2.5 text-xs font-medium bg-input-surface hover:border-primary/20 hover:bg-primary-soft/40 text-foreground transition-colors"
               >
                 <div className="flex items-center gap-2">
                   <span className="text-muted-foreground font-mono">{acc.id}</span>

@@ -178,7 +178,7 @@ export function CamundaFormRenderer({ schema, onSubmit, isSubmitting, defaultVal
       default:
         // Fallback for unsupported types
         return (
-          <div key={comp.key} className="p-4 mb-4 text-sm text-amber-800 bg-amber-50 rounded-lg">
+          <div key={comp.key} className="mb-4 rounded-2xl border border-status-returned/20 bg-status-returned-bg p-4 text-sm text-status-returned">
             نوع الحقل غير مدعوم ({comp.type}) - {label}
           </div>
         );
@@ -187,8 +187,8 @@ export function CamundaFormRenderer({ schema, onSubmit, isSubmitting, defaultVal
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
-      <div className="bg-card border border-border rounded-xl p-5 shadow-sm">
-        <h3 className="font-semibold text-lg mb-4 text-foreground border-b border-border pb-3">إكمال المهمة</h3>
+      <div className="surface-card p-5">
+        <h3 className="mb-4 border-b border-border pb-3 text-lg font-semibold text-foreground">إكمال المهمة</h3>
         
         <div className="grid grid-cols-1 gap-x-6 gap-y-2 lg:grid-cols-2">
           {schema.components.map(comp => (
@@ -202,7 +202,7 @@ export function CamundaFormRenderer({ schema, onSubmit, isSubmitting, defaultVal
           <button
             type="submit"
             disabled={isSubmitting}
-            className="flex items-center gap-2 rounded-lg bg-primary px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary/90 transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 rounded-2xl bg-primary px-6 py-2.5 text-sm font-semibold text-white shadow-[var(--shadow-soft)] transition-colors hover:bg-primary-dark disabled:opacity-50"
           >
             {isSubmitting ? 'جارٍ الحفظ...' : 'إرسال'}
           </button>

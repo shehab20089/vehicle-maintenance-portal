@@ -97,7 +97,7 @@ export function NewRequestPage() {
     },
   });
 
-  const inputClass = 'w-full rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-all';
+  const inputClass = 'w-full rounded-2xl border border-input bg-input-surface px-4 py-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/20 focus:border-primary transition-all';
   const selectClass = `${inputClass} cursor-pointer`;
 
   const stepFields: Record<number, (keyof FormData)[]> = {
@@ -159,7 +159,7 @@ export function NewRequestPage() {
       />
 
       {/* Stepper */}
-      <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
+      <div className="surface-card p-4">
         <div className="flex items-center justify-between gap-0">
           {STEPS.map((s, idx) => {
             const isDone = s.id < step;
@@ -169,15 +169,15 @@ export function NewRequestPage() {
                 <div className="flex flex-col items-center gap-1.5 flex-1">
                   <div className={cn(
                     'flex h-9 w-9 items-center justify-center rounded-full border-2 text-xs font-bold transition-all',
-                    isDone && 'border-emerald-500 bg-emerald-500 text-white',
-                    isCurrent && 'border-primary bg-primary text-white shadow-lg shadow-primary/30',
-                    !isDone && !isCurrent && 'border-border bg-muted text-muted-foreground'
+                    isDone && 'border-primary bg-primary text-white',
+                    isCurrent && 'border-primary bg-primary text-white shadow-[var(--shadow-float)]',
+                    !isDone && !isCurrent && 'border-border bg-card text-muted-foreground'
                   )}>
                     {isDone ? <Check className="h-4 w-4" /> : <s.icon className="h-4 w-4" />}
                   </div>
                   <span className={cn(
                     'text-xs font-medium text-center hidden sm:block',
-                    isDone && 'text-emerald-600',
+                    isDone && 'text-primary-dark',
                     isCurrent && 'text-primary',
                     !isDone && !isCurrent && 'text-muted-foreground'
                   )}>
@@ -185,7 +185,7 @@ export function NewRequestPage() {
                   </span>
                 </div>
                 {idx < STEPS.length - 1 && (
-                  <div className={cn('h-0.5 w-10 flex-shrink-0 mx-1', idx < step - 1 ? 'bg-emerald-400' : 'bg-border')} />
+                  <div className={cn('h-0.5 w-10 flex-shrink-0 mx-1', idx < step - 1 ? 'bg-primary/60' : 'bg-border')} />
                 )}
               </div>
             );
@@ -339,7 +339,7 @@ export function NewRequestPage() {
               <button
                 type="button"
                 onClick={prevStep}
-                className="flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground hover:bg-muted transition-colors"
+                className="flex items-center gap-2 rounded-2xl border border-border bg-card px-4 py-3 text-sm font-semibold text-foreground hover:bg-sidebar-active transition-colors"
               >
                 <ChevronRight className="h-4 w-4" />
                 السابق
@@ -351,7 +351,7 @@ export function NewRequestPage() {
               type="button"
               onClick={handleSaveDraft}
               disabled={isSaving}
-              className="flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground hover:bg-muted transition-colors disabled:opacity-50"
+              className="flex items-center gap-2 rounded-2xl border border-border bg-card px-4 py-3 text-sm font-semibold text-foreground hover:bg-sidebar-active transition-colors disabled:opacity-50"
             >
               <Save className="h-4 w-4" />
               حفظ كمسودة
@@ -360,7 +360,7 @@ export function NewRequestPage() {
               <button
                 type="button"
                 onClick={nextStep}
-                className="flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary/90 transition-colors"
+                className="flex items-center gap-2 rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-white hover:bg-primary-dark transition-colors"
               >
                 التالي
                 <ChevronLeft className="h-4 w-4" />
@@ -369,7 +369,7 @@ export function NewRequestPage() {
               <button
                 type="submit"
                 disabled={isSaving}
-                className="flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-primary/20 hover:bg-primary/90 transition-colors disabled:opacity-50"
+                className="flex items-center gap-2 rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-white shadow-[var(--shadow-soft)] hover:bg-primary-dark transition-colors disabled:opacity-50"
               >
                 <Send className="h-4 w-4" />
                 {isSaving ? 'جارٍ الإرسال...' : 'تقديم الطلب'}

@@ -40,30 +40,30 @@ const actionIcons: Record<string, React.ElementType> = {
 };
 
 const actionIconColors: Record<string, string> = {
-  'إنشاء الطلب': 'bg-gray-100 text-gray-500 ring-gray-200',
-  'تقديم الطلب': 'bg-blue-100 text-blue-600 ring-blue-200',
-  'إعادة تقديم الطلب': 'bg-blue-100 text-blue-600 ring-blue-200',
-  'إشعار مدير الشؤون الإدارية': 'bg-purple-100 text-purple-600 ring-purple-200',
-  'إحالة لمدير شعبة النقل والصيانة': 'bg-slate-100 text-slate-600 ring-slate-200',
-  'موافقة شعبة النقل والصيانة': 'bg-emerald-100 text-emerald-600 ring-emerald-200',
-  'إرجاع من شعبة النقل والصيانة': 'bg-orange-100 text-orange-600 ring-orange-200',
-  'رفض من شعبة النقل والصيانة': 'bg-red-100 text-red-600 ring-red-200',
-  'موافقة مدير الإمداد والصيانة': 'bg-emerald-100 text-emerald-600 ring-emerald-200',
-  'رفض من مدير الإمداد والصيانة': 'bg-red-100 text-red-600 ring-red-200',
-  'توجيه إلى مسؤول الصيانة': 'bg-blue-100 text-blue-600 ring-blue-200',
-  'رفض من مدير الصيانة': 'bg-red-100 text-red-600 ring-red-200',
-  'تنفيذ': 'bg-indigo-100 text-indigo-600 ring-indigo-200',
-  'إرجاع من مسؤول الصيانة': 'bg-orange-100 text-orange-600 ring-orange-200',
-  'رفض من مسؤول الصيانة': 'bg-red-100 text-red-600 ring-red-200',
-  'توجيه إلى مسؤول صيانة آخر مختص': 'bg-violet-100 text-violet-600 ring-violet-200',
-  'تنفيذ من مسؤول الصيانة المختص': 'bg-indigo-100 text-indigo-600 ring-indigo-200',
-  'رفض من مسؤول الصيانة المختص': 'bg-red-100 text-red-600 ring-red-200',
-  'إرجاع من مسؤول الصيانة المختص': 'bg-orange-100 text-orange-600 ring-orange-200',
-  'إتمام التنفيذ وتقديم النتيجة': 'bg-teal-100 text-teal-600 ring-teal-200',
-  'إحالة للمراجعة النهائية': 'bg-slate-100 text-slate-600 ring-slate-200',
-  'اعتماد نهائي': 'bg-amber-100 text-amber-600 ring-amber-200',
-  'إرجاع من المراجعة النهائية': 'bg-orange-100 text-orange-600 ring-orange-200',
-  'إغلاق الطلب': 'bg-green-100 text-green-600 ring-green-200',
+  'إنشاء الطلب': 'bg-muted text-muted-foreground ring-border/40',
+  'تقديم الطلب': 'bg-primary-soft text-primary-icon ring-primary/15',
+  'إعادة تقديم الطلب': 'bg-primary-soft text-primary-icon ring-primary/15',
+  'إشعار مدير الشؤون الإدارية': 'bg-secondary text-primary-dark ring-primary/10',
+  'إحالة لمدير شعبة النقل والصيانة': 'bg-secondary text-primary-dark ring-primary/10',
+  'موافقة شعبة النقل والصيانة': 'bg-status-approved-bg text-status-approved ring-status-approved/15',
+  'إرجاع من شعبة النقل والصيانة': 'bg-status-returned-bg text-status-returned ring-status-returned/15',
+  'رفض من شعبة النقل والصيانة': 'bg-status-rejected-bg text-status-rejected ring-status-rejected/15',
+  'موافقة مدير الإمداد والصيانة': 'bg-status-approved-bg text-status-approved ring-status-approved/15',
+  'رفض من مدير الإمداد والصيانة': 'bg-status-rejected-bg text-status-rejected ring-status-rejected/15',
+  'توجيه إلى مسؤول الصيانة': 'bg-secondary text-primary-dark ring-primary/10',
+  'رفض من مدير الصيانة': 'bg-status-rejected-bg text-status-rejected ring-status-rejected/15',
+  'تنفيذ': 'bg-status-inprogress-bg text-status-inprogress ring-status-inprogress/15',
+  'إرجاع من مسؤول الصيانة': 'bg-status-returned-bg text-status-returned ring-status-returned/15',
+  'رفض من مسؤول الصيانة': 'bg-status-rejected-bg text-status-rejected ring-status-rejected/15',
+  'توجيه إلى مسؤول صيانة آخر مختص': 'bg-secondary text-primary-dark ring-primary/10',
+  'تنفيذ من مسؤول الصيانة المختص': 'bg-status-inprogress-bg text-status-inprogress ring-status-inprogress/15',
+  'رفض من مسؤول الصيانة المختص': 'bg-status-rejected-bg text-status-rejected ring-status-rejected/15',
+  'إرجاع من مسؤول الصيانة المختص': 'bg-status-returned-bg text-status-returned ring-status-returned/15',
+  'إتمام التنفيذ وتقديم النتيجة': 'bg-status-completed-bg text-status-completed ring-status-completed/15',
+  'إحالة للمراجعة النهائية': 'bg-secondary text-primary-dark ring-primary/10',
+  'اعتماد نهائي': 'bg-status-approved-bg text-status-completed ring-status-approved/15',
+  'إرجاع من المراجعة النهائية': 'bg-status-returned-bg text-status-returned ring-status-returned/15',
+  'إغلاق الطلب': 'bg-status-completed-bg text-status-completed ring-status-completed/15',
 };
 
 interface TimelineProps {
@@ -76,7 +76,7 @@ function getIcon(action: string): React.ElementType {
 }
 
 function getIconColors(action: string): string {
-  return actionIconColors[action] ?? 'bg-gray-100 text-gray-500 ring-gray-200';
+  return actionIconColors[action] ?? 'bg-muted text-muted-foreground ring-border/40';
 }
 
 export function Timeline({ entries, className }: TimelineProps) {
@@ -105,7 +105,7 @@ export function Timeline({ entries, className }: TimelineProps) {
                   <p className="text-sm font-semibold text-foreground">{entry.action}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">{entry.description}</p>
                   {entry.notes && (
-                    <div className="mt-2 rounded-md bg-muted/60 border border-border px-3 py-2">
+                    <div className="mt-2 rounded-2xl border border-border/70 bg-sidebar-active px-3 py-2">
                       <p className="text-xs text-foreground/80">{entry.notes}</p>
                     </div>
                   )}

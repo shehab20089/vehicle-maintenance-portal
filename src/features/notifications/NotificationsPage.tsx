@@ -1,22 +1,24 @@
 import { useNotificationStore } from '@/store/notificationStore';
-import { PageHeader } from '@/components/shared/PageHeader';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { NOTIFICATION_TYPE_LABELS } from '@/utils/arabicLabels';
 import { formatRelativeTime } from '@/utils/formatters';
-import { useNavigate } from 'react-router-dom';
-import { Bell, Check, CheckCheck } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Bell, Check, CheckCheck, ChevronLeft, Home } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { NotificationType } from '@/types';
 
 const typeColors: Record<NotificationType, string> = {
-  request_submitted: 'bg-blue-100 text-blue-600',
-  request_approved: 'bg-emerald-100 text-emerald-600',
-  request_rejected: 'bg-red-100 text-red-600',
-  request_returned: 'bg-orange-100 text-orange-600',
-  request_routed: 'bg-indigo-100 text-indigo-600',
-  request_in_execution: 'bg-teal-100 text-teal-600',
-  request_completed: 'bg-green-100 text-green-600',
-  final_result_available: 'bg-purple-100 text-purple-600',
+  request_submitted: 'bg-input-surface text-primary-dark',
+  request_approved: 'bg-secondary text-primary-dark',
+  request_rejected: 'bg-status-rejected-bg text-status-rejected',
+  request_returned: 'bg-status-returned-bg text-status-returned',
+  request_routed: 'bg-input-surface text-primary-dark',
+  request_in_execution: 'bg-input-surface text-primary-dark',
+  maintenance_scheduled: 'bg-input-surface text-primary-dark',
+  supply_items_requested: 'bg-status-pending-bg text-status-pending',
+  maintenance_report_ready: 'bg-input-surface text-primary-dark',
+  final_approved: 'bg-secondary text-primary-dark',
+  final_result_available: 'bg-input-surface text-primary-dark',
 };
 
 export function NotificationsPage() {
@@ -28,29 +30,47 @@ export function NotificationsPage() {
   );
 
   return (
-    <div className="max-w-2xl space-y-5">
-      <PageHeader
-        title="الإشعارات"
-        description="جميع إشعارات طلبات الصيانة"
-        breadcrumbs={[{ label: 'الإشعارات' }]}
-        actions={
-          unreadCount > 0 && (
-            <button
-              onClick={markAllAsRead}
-              className="flex items-center gap-1.5 text-xs text-primary hover:underline font-medium"
-            >
-              <CheckCheck className="h-3.5 w-3.5" />
-              تعيين الكل كمقروء
-            </button>
-          )
-        }
-      />
+    <div className="max-w-[920px] space-y-4">
+      <div className="space-y-3">
+        <nav className="flex items-center gap-1.5 text-sm text-muted-foreground">
+          <Link to="/dashboard" className="flex items-center gap-1 transition-colors hover:text-foreground">
+            <Home className="h-3.5 w-3.5" />
+          </Link>
+          <span className="flex items-center gap-1.5">
+            <ChevronLeft className="h-3.5 w-3.5 opacity-40" />
+            <span className="font-medium text-foreground">الإشعارات</span>
+          </span>
+        </nav>
 
-      <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+        <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+          <div className="space-y-1">
+            <h1 className="text-2xl font-bold text-foreground">الإشعارات</h1>
+            <p className="text-sm text-muted-foreground">آخر تحديثات طلبات الصيانة والحالات التي تحتاج إلى متابعة.</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {unreadCount > 0 && (
+              <span className="rounded-full border border-border bg-input-surface px-3 py-1.5 text-xs font-semibold text-primary-dark">
+                {unreadCount} غير مقروءة
+              </span>
+            )}
+            {unreadCount > 0 && (
+              <button
+                onClick={markAllAsRead}
+                className="flex items-center gap-2 rounded-2xl border border-border bg-card px-3 py-2 text-xs font-semibold text-primary-dark transition-colors hover:bg-sidebar-active"
+              >
+                <CheckCheck className="h-3.5 w-3.5" />
+                تعيين الكل كمقروء
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="surface-card overflow-hidden">
         {sorted.length === 0 ? (
           <EmptyState icon={Bell} title="لا توجد إشعارات" description="ستظهر إشعارات طلباتك هنا" />
         ) : (
-          <div className="divide-y divide-border">
+          <div className="divide-y divide-border/60">
             {sorted.map((notif) => (
               <div
                 key={notif.id}
@@ -59,42 +79,52 @@ export function NotificationsPage() {
                   if (notif.requestId) navigate(`/requests/${notif.requestId}`);
                 }}
                 className={cn(
-                  'flex items-start gap-3 px-5 py-4 cursor-pointer transition-colors hover:bg-muted/30',
-                  !notif.read && 'bg-primary/5'
+                  'flex cursor-pointer items-start gap-4 px-5 py-4 transition-colors hover:bg-sidebar-active',
+                  'bg-card'
                 )}
               >
-                {/* Icon */}
-                <div className={cn('flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl', typeColors[notif.type])}>
+                <div className={cn('flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl', typeColors[notif.type])}>
                   <Bell className="h-4 w-4" />
                 </div>
 
-                {/* Content */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <p className={cn('text-sm', !notif.read ? 'font-semibold text-foreground' : 'font-medium text-foreground')}>
-                        {notif.title}
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-start gap-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className={cn('text-sm leading-6', !notif.read ? 'font-semibold text-foreground' : 'font-medium text-foreground')}>
+                          {notif.title}
+                        </p>
+                        {!notif.read && <span className="h-2 w-2 rounded-full bg-primary" />}
+                      </div>
+                      <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                        {notif.message}
                       </p>
-                      <p className="mt-0.5 text-xs text-muted-foreground leading-relaxed">{notif.message}</p>
-                      {notif.requestNumber && (
-                        <span className="mt-1 inline-block text-[10px] font-mono font-bold text-primary/80">{notif.requestNumber}</span>
-                      )}
+                      <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px]">
+                        {notif.requestNumber && (
+                          <span className="rounded-full bg-input-surface px-2.5 py-1 font-mono font-semibold text-primary-dark">
+                            {notif.requestNumber}
+                          </span>
+                        )}
+                        <span className="text-muted-foreground">
+                          {NOTIFICATION_TYPE_LABELS[notif.type]}
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
-                      <time className="text-xs text-muted-foreground whitespace-nowrap">
-                        {formatRelativeTime(notif.createdAt)}
-                      </time>
-                      {!notif.read && (
-                        <span className="h-2 w-2 rounded-full bg-primary" />
-                      )}
-                      {notif.read && (
-                        <Check className="h-3 w-3 text-muted-foreground" />
+
+                    <div className="flex shrink-0 flex-col items-end gap-2 whitespace-nowrap text-xs text-muted-foreground">
+                      <time>{formatRelativeTime(notif.createdAt)}</time>
+                      {notif.read ? (
+                        <span className="flex items-center gap-1 text-muted-foreground">
+                          <Check className="h-3 w-3" />
+                          تمت القراءة
+                        </span>
+                      ) : (
+                        <span className="rounded-full border border-border bg-input-surface px-2.5 py-1 font-semibold text-primary-dark">
+                          جديد
+                        </span>
                       )}
                     </div>
                   </div>
-                  <p className="mt-1 text-[10px] text-muted-foreground">
-                    {NOTIFICATION_TYPE_LABELS[notif.type]}
-                  </p>
                 </div>
               </div>
             ))}

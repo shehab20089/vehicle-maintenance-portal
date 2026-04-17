@@ -9,7 +9,7 @@ import { EmptyState } from '@/components/shared/EmptyState';
 import { RequestStatus, Priority, type MaintenanceRequest, UserRole } from '@/types';
 import { PRIORITY_LABELS, STATUS_LABELS } from '@/utils/arabicLabels';
 import { formatDate } from '@/utils/formatters';
-import { Search, Filter, ChevronRight, Plus, SlidersHorizontal, ClipboardList } from 'lucide-react';
+import { Search, ChevronRight, Plus, SlidersHorizontal, ClipboardList } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type SortField = 'createdAt' | 'updatedAt' | 'priority' | 'status' | 'requestNumber';
@@ -90,7 +90,7 @@ export function RequestListPage() {
           currentUser?.role === UserRole.TRAFFIC_OFFICER && (
             <button
               onClick={() => navigate('/requests/new')}
-              className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary/90 transition-all"
+              className="flex items-center gap-2 rounded-2xl bg-primary px-4 py-3 text-sm font-semibold text-white shadow-[var(--shadow-soft)] hover:bg-primary-dark transition-all"
             >
               <Plus className="h-4 w-4" />
               طلب جديد
@@ -100,7 +100,7 @@ export function RequestListPage() {
       />
 
       {/* Filters bar */}
-      <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4 shadow-sm">
+      <div className="surface-card p-4">
         <div className="flex items-center gap-3">
           <div className="relative flex-1">
             <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -109,14 +109,14 @@ export function RequestListPage() {
               placeholder="البحث برقم الطلب أو المركبة أو الموظف..."
               value={search}
               onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
-              className="w-full rounded-lg border border-input bg-background py-2 pr-9 pl-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              className="w-full rounded-2xl border border-input bg-input-surface py-3 pr-10 pl-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/20"
             />
           </div>
           <button
             onClick={() => setShowFilters((f) => !f)}
             className={cn(
-              'flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors',
-              showFilters ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-background text-foreground hover:bg-muted'
+              'flex items-center gap-2 rounded-2xl border px-3 py-3 text-sm font-semibold transition-colors',
+              showFilters ? 'border-primary/35 bg-primary-soft text-primary-dark' : 'border-border bg-card text-foreground hover:bg-sidebar-active'
             )}
           >
             <SlidersHorizontal className="h-4 w-4" />
@@ -131,7 +131,7 @@ export function RequestListPage() {
               <select
                 value={statusFilter}
                 onChange={(e) => { setStatusFilter(e.target.value as RequestStatus | ''); setCurrentPage(1); }}
-                className="rounded-lg border border-input bg-background px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-ring"
+                className="rounded-2xl border border-input bg-input-surface px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-ring/20"
               >
                 <option value="">الكل</option>
                 {statuses.map((s) => <option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
@@ -142,7 +142,7 @@ export function RequestListPage() {
               <select
                 value={priorityFilter}
                 onChange={(e) => { setPriorityFilter(e.target.value as Priority | ''); setCurrentPage(1); }}
-                className="rounded-lg border border-input bg-background px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-ring"
+                className="rounded-2xl border border-input bg-input-surface px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-ring/20"
               >
                 <option value="">الكل</option>
                 {priorities.map((p) => <option key={p} value={p}>{PRIORITY_LABELS[p]}</option>)}
@@ -151,7 +151,7 @@ export function RequestListPage() {
             {(statusFilter || priorityFilter || search) && (
               <button
                 onClick={() => { setStatusFilter(''); setPriorityFilter(''); setSearch(''); setCurrentPage(1); }}
-                className="text-xs text-red-500 hover:text-red-700 font-medium"
+                className="text-xs font-medium text-primary-dark transition-colors hover:text-primary"
               >
                 مسح الفلاتر
               </button>
@@ -166,7 +166,7 @@ export function RequestListPage() {
       </p>
 
       {/* Table */}
-      <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+      <div className="surface-card overflow-hidden">
         {paginated.length === 0 ? (
           <EmptyState
             icon={ClipboardList}
@@ -177,7 +177,7 @@ export function RequestListPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border bg-muted/30">
+                <tr className="border-b border-border bg-input-surface">
                   <th className="px-4 py-3 text-right">
                     <button onClick={() => handleSort('requestNumber')} className="text-xs font-semibold text-muted-foreground hover:text-foreground">
                       رقم الطلب <SortIndicator field="requestNumber" />
@@ -209,7 +209,7 @@ export function RequestListPage() {
                   <tr
                     key={req.id}
                     onClick={() => navigate(`/requests/${req.id}`)}
-                    className="border-b border-border/50 last:border-0 hover:bg-muted/30 cursor-pointer transition-colors"
+                    className="cursor-pointer border-b border-border/50 last:border-0 hover:bg-sidebar-active transition-colors"
                   >
                     <td className="px-4 py-3.5">
                       <span className="font-mono text-xs font-bold text-primary">{req.requestNumber}</span>
@@ -246,7 +246,7 @@ export function RequestListPage() {
           <button
             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
             disabled={currentPage === 1}
-            className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium disabled:opacity-40 hover:bg-muted transition-colors"
+            className="rounded-2xl border border-border px-3 py-2 text-xs font-semibold disabled:opacity-40 hover:bg-sidebar-active transition-colors"
           >
             السابق
           </button>
@@ -256,7 +256,7 @@ export function RequestListPage() {
               onClick={() => setCurrentPage(p)}
               className={cn(
                 'rounded-lg px-3 py-1.5 text-xs font-medium transition-colors',
-                p === currentPage ? 'bg-primary text-white' : 'border border-border hover:bg-muted'
+                p === currentPage ? 'rounded-2xl bg-primary text-white' : 'rounded-2xl border border-border hover:bg-sidebar-active'
               )}
             >
               {p}
@@ -265,7 +265,7 @@ export function RequestListPage() {
           <button
             onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
             disabled={currentPage === totalPages}
-            className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium disabled:opacity-40 hover:bg-muted transition-colors"
+            className="rounded-2xl border border-border px-3 py-2 text-xs font-semibold disabled:opacity-40 hover:bg-sidebar-active transition-colors"
           >
             التالي
           </button>

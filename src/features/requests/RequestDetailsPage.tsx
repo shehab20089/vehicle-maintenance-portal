@@ -13,7 +13,7 @@ import { ConfirmationModal } from '@/components/shared/ConfirmationModal';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { UserRole, RequestStatus, type MaintenanceOutcome, OutcomeType } from '@/types';
 import { getAllowedTransitions } from '@/utils/workflow';
-import { ROLE_LABELS, ISSUE_CATEGORY_LABELS, VEHICLE_CONDITION_LABELS, OUTCOME_TYPE_LABELS, isRejectedStatus } from '@/utils/arabicLabels';
+import { ROLE_LABELS, ISSUE_CATEGORY_LABELS, VEHICLE_CONDITION_LABELS, OUTCOME_TYPE_LABELS } from '@/utils/arabicLabels';
 import { formatDate, formatDateTime } from '@/utils/formatters';
 import { getUsersByRole } from '@/data/mockUsers';
 import { cn } from '@/lib/utils';
@@ -50,7 +50,7 @@ const DEMO_CAMUNDA_SCHEMA: CamundaFormSchema = {
       properties: { labelEn: 'Upload Document', labelAr: 'تحميل المستند' },
     },
   ],
-  type:'default'
+  type: 'default'
 };
 
 const ACTION_ICONS: Record<string, React.ElementType> = {
@@ -77,27 +77,31 @@ const ACTION_ICONS: Record<string, React.ElementType> = {
 };
 
 const ACTION_STYLES: Record<string, string> = {
-  transport_approve: 'bg-emerald-600 hover:bg-emerald-700 text-white',
-  supply_approve: 'bg-emerald-600 hover:bg-emerald-700 text-white',
-  route_to_maintenance: 'bg-blue-600 hover:bg-blue-700 text-white',
-  start_execution: 'bg-indigo-600 hover:bg-indigo-700 text-white',
-  specialized_execute: 'bg-indigo-600 hover:bg-indigo-700 text-white',
-  route_to_specialized: 'bg-violet-600 hover:bg-violet-700 text-white',
-  complete_execution: 'bg-teal-600 hover:bg-teal-700 text-white',
-  final_approve: 'bg-amber-600 hover:bg-amber-700 text-white',
-  submit: 'bg-primary hover:bg-primary/90 text-white',
-  resubmit: 'bg-primary hover:bg-primary/90 text-white',
-  close: 'bg-slate-600 hover:bg-slate-700 text-white',
-  transport_return: 'bg-orange-500 hover:bg-orange-600 text-white',
-  maintenance_return: 'bg-orange-500 hover:bg-orange-600 text-white',
-  specialized_return: 'bg-orange-500 hover:bg-orange-600 text-white',
-  final_return: 'bg-orange-500 hover:bg-orange-600 text-white',
-  transport_reject: 'bg-red-600 hover:bg-red-700 text-white',
-  supply_reject: 'bg-red-600 hover:bg-red-700 text-white',
-  maintenance_director_reject: 'bg-red-600 hover:bg-red-700 text-white',
-  maintenance_reject: 'bg-red-600 hover:bg-red-700 text-white',
-  specialized_reject: 'bg-red-600 hover:bg-red-700 text-white',
+  transport_approve: 'bg-primary text-white hover:bg-primary-dark',
+  supply_approve: 'bg-primary text-white hover:bg-primary-dark',
+  route_to_maintenance: 'bg-primary text-white hover:bg-primary-dark',
+  start_execution: 'bg-primary text-white hover:bg-primary-dark',
+  specialized_execute: 'bg-primary text-white hover:bg-primary-dark',
+  route_to_specialized: 'bg-primary text-white hover:bg-primary-dark',
+  complete_execution: 'bg-primary text-white hover:bg-primary-dark',
+  final_approve: 'bg-primary-dark text-white hover:bg-primary-icon',
+  submit: 'bg-primary text-white hover:bg-primary-dark',
+  resubmit: 'bg-primary text-white hover:bg-primary-dark',
+  close: 'bg-primary-dark text-white hover:bg-primary-icon',
+  transport_return: 'bg-status-returned text-white hover:brightness-95',
+  maintenance_return: 'bg-status-returned text-white hover:brightness-95',
+  specialized_return: 'bg-status-returned text-white hover:brightness-95',
+  final_return: 'bg-status-returned text-white hover:brightness-95',
+  transport_reject: 'bg-status-rejected text-white hover:brightness-95',
+  supply_reject: 'bg-status-rejected text-white hover:brightness-95',
+  maintenance_director_reject: 'bg-status-rejected text-white hover:brightness-95',
+  maintenance_reject: 'bg-status-rejected text-white hover:brightness-95',
+  specialized_reject: 'bg-status-rejected text-white hover:brightness-95',
 };
+
+const SECTION_CARD_CLASS = 'surface-card p-5';
+const SURFACE_INPUT_CLASS =
+  'w-full rounded-2xl border border-input bg-input-surface px-3 py-2.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/20';
 
 type ActiveTab = 'details' | 'timeline' | 'comments' | 'documents' | 'camunda_forms';
 
@@ -107,7 +111,7 @@ export function RequestDetailsPage() {
   const { getRequestById, performAction, addComment } = useRequestStore();
   const { currentUser } = useAuthStore();
 
-  const [activeTab, setActiveTab] = useState<ActiveTab>('details');
+  const [activeTab, setActiveTab] = useState<ActiveTab>('camunda_forms');
   const [confirmAction, setConfirmAction] = useState<string | null>(null);
   const [actionNotes, setActionNotes] = useState('');
   const [officerName, setOfficerName] = useState('');
@@ -134,7 +138,6 @@ export function RequestDetailsPage() {
   }
 
   const isAdminDirector = currentUser?.role === UserRole.ADMIN_DIRECTOR;
-  const rejectedStatus = isRejectedStatus(request.status);
   const allowedTransitions = currentUser ? getAllowedTransitions(request.status, currentUser.role) : [];
 
   // Officers for routing dropdowns — both primary & specialized share the MAINTENANCE_OFFICER role
@@ -190,11 +193,11 @@ export function RequestDetailsPage() {
   }, []);
 
   const TABS: { id: ActiveTab; label: string; icon: React.ElementType; count?: number }[] = [
+    { id: 'camunda_forms', label: 'نماذج Camunda', icon: Layers },
     { id: 'details', label: 'التفاصيل', icon: FileText },
     { id: 'timeline', label: 'سجل النشاط', icon: Wrench, count: request.timeline.length },
     { id: 'comments', label: 'التعليقات', icon: MessageSquare, count: request.comments.length },
     { id: 'documents', label: 'المستندات', icon: Paperclip, count: request.finalDocuments.length },
-    { id: 'camunda_forms', label: 'نماذج Camunda', icon: Layers },
   ];
 
   return (
@@ -211,17 +214,17 @@ export function RequestDetailsPage() {
       />
 
       {/* Workflow Stepper */}
-      <div className="overflow-x-auto rounded-xl border border-border bg-card p-5 shadow-sm">
+      <div className="surface-card overflow-x-auto p-5">
         <WorkflowStepper currentStatus={request.status} />
       </div>
 
       {/* Admin Director — notification-only banner */}
       {isAdminDirector && (
-        <div className="flex items-start gap-3 rounded-xl border border-purple-200 bg-purple-50 p-4">
-          <Bell className="h-5 w-5 text-purple-600 mt-0.5 flex-shrink-0" />
+        <div className="flex items-start gap-3 rounded-[1.5rem] border border-primary/15 bg-secondary p-4">
+          <Bell className="mt-0.5 h-5 w-5 flex-shrink-0 text-primary-dark" />
           <div>
-            <p className="text-sm font-semibold text-purple-800">وضع الاطلاع فقط</p>
-            <p className="text-xs text-purple-600 mt-0.5">
+            <p className="text-sm font-semibold text-primary-icon">وضع الاطلاع فقط</p>
+            <p className="mt-0.5 text-xs text-primary-dark">
               دورك كمدير الشؤون الإدارية هو الاطلاع على الطلبات وتلقي الإشعارات. لا تتطلب الطلبات موافقتك لتتقدم في سير العمل.
             </p>
           </div>
@@ -230,11 +233,11 @@ export function RequestDetailsPage() {
 
       {/* Return banner for traffic officer */}
       {request.pendingReturnToRole && currentUser?.role === UserRole.TRAFFIC_OFFICER && (
-        <div className="flex items-start gap-3 rounded-xl border border-orange-200 bg-orange-50 p-4">
-          <RotateCcw className="h-5 w-5 text-orange-600 mt-0.5 flex-shrink-0" />
+        <div className="flex items-start gap-3 rounded-[1.5rem] border border-status-returned/20 bg-status-returned-bg p-4">
+          <RotateCcw className="mt-0.5 h-5 w-5 flex-shrink-0 text-status-returned" />
           <div>
-            <p className="text-sm font-semibold text-orange-800">الطلب معاد للاستكمال</p>
-            <p className="text-xs text-orange-600 mt-0.5">
+            <p className="text-sm font-semibold text-status-returned">الطلب معاد للاستكمال</p>
+            <p className="mt-0.5 text-xs text-status-returned">
               بعد إعادة التقديم سيُرسل هذا الطلب مباشرة إلى{' '}
               <strong>{ROLE_LABELS[request.pendingReturnToRole]}</strong> الذي أعاده.
             </p>
@@ -246,20 +249,20 @@ export function RequestDetailsPage() {
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-5">
           {/* Tabs */}
-          <div className="flex border-b border-border overflow-x-auto">
+          <div className="flex overflow-x-auto rounded-[1.5rem] border border-border/80 bg-card px-2 shadow-[var(--shadow-soft)]">
             {TABS.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  'flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-all -mb-px whitespace-nowrap',
-                  activeTab === tab.id ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
+                  'flex items-center gap-1.5 rounded-2xl px-4 py-3 text-sm font-medium transition-all whitespace-nowrap',
+                  activeTab === tab.id ? 'bg-primary-soft text-primary-icon shadow-[var(--shadow-soft)]' : 'text-muted-foreground hover:bg-sidebar-active hover:text-foreground'
                 )}
               >
                 <tab.icon className="h-4 w-4" />
                 {tab.label}
                 {tab.count !== undefined && tab.count > 0 && (
-                  <span className={cn('rounded-full px-1.5 py-0.5 text-[10px] font-bold', activeTab === tab.id ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground')}>
+                  <span className={cn('rounded-full px-1.5 py-0.5 text-[10px] font-bold', activeTab === tab.id ? 'bg-white text-primary' : 'bg-muted text-muted-foreground')}>
                     {tab.count}
                   </span>
                 )}
@@ -278,7 +281,7 @@ export function RequestDetailsPage() {
                   { label: 'المرحلة الحالية', value: request.currentStage },
                   { label: 'المسؤول الحالي', value: request.currentOwnerName || 'غير محدد' },
                 ].map((item) => (
-                  <div key={item.label} className="rounded-lg bg-muted/50 px-3 py-2.5">
+                  <div key={item.label} className="rounded-2xl border border-border/60 bg-card px-3 py-3 shadow-[var(--shadow-soft)]">
                     <p className="text-xs font-medium text-muted-foreground">{item.label}</p>
                     <p className="mt-0.5 text-sm font-semibold text-foreground truncate">{item.value}</p>
                   </div>
@@ -286,9 +289,9 @@ export function RequestDetailsPage() {
               </div>
 
               {/* Requester Card */}
-              <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
+              <div className={SECTION_CARD_CLASS}>
                 <div className="flex items-center gap-2 mb-4">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100"><User className="h-4 w-4 text-blue-600" /></div>
+                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary-soft"><User className="h-4 w-4 text-primary-icon" /></div>
                   <h3 className="text-sm font-semibold text-foreground">بيانات مقدم الطلب</h3>
                 </div>
                 <div className="grid grid-cols-2 gap-3 text-sm">
@@ -300,9 +303,9 @@ export function RequestDetailsPage() {
               </div>
 
               {/* Vehicle Card */}
-              <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
+              <div className={SECTION_CARD_CLASS}>
                 <div className="flex items-center gap-2 mb-4">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-100"><Car className="h-4 w-4 text-teal-600" /></div>
+                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary-soft"><Car className="h-4 w-4 text-primary-icon" /></div>
                   <h3 className="text-sm font-semibold text-foreground">بيانات المركبة</h3>
                 </div>
                 <div className="grid grid-cols-2 gap-3 text-sm">
@@ -314,7 +317,7 @@ export function RequestDetailsPage() {
                   <div><span className="text-muted-foreground">اللون: </span><span>{request.vehicle.color}</span></div>
                   <div className="col-span-2">
                     <span className="text-muted-foreground">الحالة: </span>
-                    <span className={cn('font-semibold', request.vehicle.currentCondition === 'non_operational' ? 'text-red-600' : request.vehicle.currentCondition === 'partially' ? 'text-amber-600' : 'text-emerald-600')}>
+                    <span className={cn('font-semibold', request.vehicle.currentCondition === 'non_operational' ? 'text-status-rejected' : request.vehicle.currentCondition === 'partially' ? 'text-status-returned' : 'text-status-approved')}>
                       {VEHICLE_CONDITION_LABELS[request.vehicle.currentCondition]}
                     </span>
                   </div>
@@ -322,9 +325,9 @@ export function RequestDetailsPage() {
               </div>
 
               {/* Issue Card */}
-              <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
+              <div className={SECTION_CARD_CLASS}>
                 <div className="flex items-center gap-2 mb-4">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-100"><Wrench className="h-4 w-4 text-orange-600" /></div>
+                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary-soft"><Wrench className="h-4 w-4 text-primary-icon" /></div>
                   <h3 className="text-sm font-semibold text-foreground">تفاصيل المشكلة</h3>
                 </div>
                 <div className="space-y-3 text-sm">
@@ -336,7 +339,7 @@ export function RequestDetailsPage() {
                   {request.notes && (
                     <div>
                       <p className="text-muted-foreground mb-1">ملاحظات:</p>
-                      <p className="rounded-lg bg-amber-50 border border-amber-200 p-3 text-amber-800 leading-relaxed">{request.notes}</p>
+                      <p className="rounded-2xl border border-status-returned/20 bg-status-returned-bg p-3 leading-relaxed text-status-returned">{request.notes}</p>
                     </div>
                   )}
                 </div>
@@ -344,12 +347,12 @@ export function RequestDetailsPage() {
 
               {/* Maintenance Execution */}
               {request.maintenanceExecution && (
-                <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
+                <div className={SECTION_CARD_CLASS}>
                   <h3 className="text-sm font-semibold text-foreground mb-4">تفاصيل التنفيذ</h3>
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     <div><span className="text-muted-foreground">مسؤول الصيانة: </span><span className="font-medium">{request.maintenanceExecution.assignedOfficer}</span></div>
                     {request.maintenanceExecution.specializedOfficer && (
-                      <div><span className="text-muted-foreground">المسؤول المختص: </span><span className="font-medium text-violet-600">{request.maintenanceExecution.specializedOfficer}</span></div>
+                      <div><span className="text-muted-foreground">المسؤول المختص: </span><span className="font-medium text-primary-dark">{request.maintenanceExecution.specializedOfficer}</span></div>
                     )}
                     {request.maintenanceExecution.startDate && <div><span className="text-muted-foreground">تاريخ البدء: </span><span>{formatDate(request.maintenanceExecution.startDate)}</span></div>}
                     {request.maintenanceExecution.actualCompletion && <div><span className="text-muted-foreground">تاريخ الانتهاء: </span><span>{formatDate(request.maintenanceExecution.actualCompletion)}</span></div>}
@@ -364,7 +367,7 @@ export function RequestDetailsPage() {
                         <p className="text-muted-foreground mb-1.5">قطع الغيار:</p>
                         <div className="flex flex-wrap gap-1.5">
                           {request.maintenanceExecution.partsUsed.map((part, i) => (
-                            <span key={i} className="rounded-full bg-blue-50 border border-blue-200 px-2.5 py-1 text-xs text-blue-700">{part}</span>
+                            <span key={i} className="rounded-full border border-primary/15 bg-secondary px-2.5 py-1 text-xs text-primary-dark">{part}</span>
                           ))}
                         </div>
                       </div>
@@ -376,7 +379,7 @@ export function RequestDetailsPage() {
                       <div className="space-y-2">
                         {request.maintenanceExecution.checklist.map((item) => (
                           <div key={item.id} className="flex items-center gap-2.5">
-                            <div className={cn('flex h-5 w-5 items-center justify-center rounded-full border-2 flex-shrink-0', item.completed ? 'border-emerald-500 bg-emerald-500' : 'border-border')}>
+                            <div className={cn('flex h-5 w-5 items-center justify-center rounded-full border-2 flex-shrink-0', item.completed ? 'border-primary bg-primary' : 'border-border')}>
                               {item.completed && <CheckCircle className="h-3 w-3 text-white" />}
                             </div>
                             <span className={cn('text-sm', item.completed ? 'line-through text-muted-foreground' : 'text-foreground')}>{item.label}</span>
@@ -390,23 +393,23 @@ export function RequestDetailsPage() {
 
               {/* Maintenance Outcome (if present) */}
               {request.maintenanceOutcome && (
-                <div className="rounded-xl border border-teal-200 bg-teal-50 p-5 shadow-sm">
+                <div className="rounded-[1.5rem] border border-primary/20 bg-secondary p-5 shadow-[var(--shadow-soft)]">
                   <div className="flex items-center gap-2 mb-3">
-                    <Star className="h-5 w-5 text-teal-600" />
-                    <h3 className="text-sm font-semibold text-teal-800">نتيجة الصيانة</h3>
+                    <Star className="h-5 w-5 text-primary-dark" />
+                    <h3 className="text-sm font-semibold text-primary-icon">نتيجة الصيانة</h3>
                   </div>
                   <div className="space-y-2 text-sm">
-                    <div><span className="text-teal-600">نوع النتيجة: </span><span className="font-semibold text-teal-800">{request.maintenanceOutcome.outcomeLabel}</span></div>
-                    {request.maintenanceOutcome.reportNotes && <div><span className="text-teal-600">ملاحظات: </span><span className="text-teal-800">{request.maintenanceOutcome.reportNotes}</span></div>}
+                    <div><span className="text-primary-dark">نوع النتيجة: </span><span className="font-semibold text-primary-icon">{request.maintenanceOutcome.outcomeLabel}</span></div>
+                    {request.maintenanceOutcome.reportNotes && <div><span className="text-primary-dark">ملاحظات: </span><span className="text-primary-icon">{request.maintenanceOutcome.reportNotes}</span></div>}
                     {request.maintenanceOutcome.scheduledDate && (
-                      <div className="flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5 text-teal-600" /><span className="text-teal-800">موعد الصيانة: {formatDate(request.maintenanceOutcome.scheduledDate)}</span></div>
+                      <div className="flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5 text-primary-dark" /><span className="text-primary-icon">موعد الصيانة: {formatDate(request.maintenanceOutcome.scheduledDate)}</span></div>
                     )}
                     {request.maintenanceOutcome.supplyItemsRequested && request.maintenanceOutcome.supplyItemsRequested.length > 0 && (
                       <div>
-                        <div className="flex items-center gap-1.5 mb-1"><Package className="h-3.5 w-3.5 text-teal-600" /><span className="text-teal-600">الأصناف المطلوبة:</span></div>
+                        <div className="mb-1 flex items-center gap-1.5"><Package className="h-3.5 w-3.5 text-primary-dark" /><span className="text-primary-dark">الأصناف المطلوبة:</span></div>
                         <div className="flex flex-wrap gap-1.5">
                           {request.maintenanceOutcome.supplyItemsRequested.map((item, i) => (
-                            <span key={i} className="rounded-full bg-teal-100 border border-teal-200 px-2.5 py-1 text-xs text-teal-800">{item}</span>
+                            <span key={i} className="rounded-full border border-primary/15 bg-primary-soft px-2.5 py-1 text-xs text-primary-icon">{item}</span>
                           ))}
                         </div>
                       </div>
@@ -417,11 +420,11 @@ export function RequestDetailsPage() {
 
               {/* Attachments */}
               {request.attachments.length > 0 && (
-                <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
+                <div className={SECTION_CARD_CLASS}>
                   <h3 className="text-sm font-semibold text-foreground mb-3">المرفقات ({request.attachments.length})</h3>
                   <div className="space-y-2">
                     {request.attachments.map((att) => (
-                      <div key={att.id} className="flex items-center gap-3 rounded-lg border border-border p-3 hover:bg-muted/30 transition-colors">
+                      <div key={att.id} className="flex items-center gap-3 rounded-2xl border border-border/70 p-3 transition-colors hover:bg-sidebar-active">
                         <Paperclip className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate">{att.name}</p>
@@ -437,7 +440,7 @@ export function RequestDetailsPage() {
 
           {/* Timeline Tab */}
           {activeTab === 'timeline' && (
-            <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
+            <div className={SECTION_CARD_CLASS}>
               <h3 className="text-sm font-semibold text-foreground mb-4">سجل النشاط والمراحل</h3>
               <Timeline entries={request.timeline} />
             </div>
@@ -445,7 +448,7 @@ export function RequestDetailsPage() {
 
           {/* Comments Tab */}
           {activeTab === 'comments' && (
-            <div className="rounded-xl border border-border bg-card p-5 shadow-sm space-y-4">
+            <div className={`${SECTION_CARD_CLASS} space-y-4`}>
               <h3 className="text-sm font-semibold text-foreground">التعليقات والملاحظات</h3>
               <div className="space-y-2">
                 <textarea
@@ -453,13 +456,13 @@ export function RequestDetailsPage() {
                   onChange={(e) => setCommentText(e.target.value)}
                   placeholder="أضف تعليقاً أو ملاحظة..."
                   rows={3}
-                  className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  className={SURFACE_INPUT_CLASS}
                 />
                 <div className="flex justify-end">
                   <button
                     onClick={handleAddComment}
                     disabled={!commentText.trim()}
-                    className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-white hover:bg-primary/90 transition-colors disabled:opacity-50"
+                    className="flex items-center gap-2 rounded-2xl bg-primary px-4 py-2.5 text-xs font-semibold text-white transition-colors hover:bg-primary-dark disabled:opacity-50"
                   >
                     <Send className="h-3.5 w-3.5" />
                     إضافة تعليق
@@ -492,7 +495,7 @@ export function RequestDetailsPage() {
 
           {/* Documents Tab */}
           {activeTab === 'documents' && (
-            <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
+            <div className={SECTION_CARD_CLASS}>
               <h3 className="text-sm font-semibold text-foreground mb-4">المستندات والتقارير النهائية</h3>
               {request.finalDocuments.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-10 text-center">
@@ -502,9 +505,9 @@ export function RequestDetailsPage() {
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {request.finalDocuments.map((doc) => (
-                    <div key={doc.id} className="flex items-center gap-3 rounded-xl border border-border p-4 hover:bg-muted/30 transition-colors">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 flex-shrink-0">
-                        <FileText className="h-5 w-5 text-blue-600" />
+                    <div key={doc.id} className="flex items-center gap-3 rounded-[1.25rem] border border-border/70 p-4 transition-colors hover:bg-sidebar-active">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary-soft flex-shrink-0">
+                        <FileText className="h-5 w-5 text-primary-icon" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-semibold truncate">{doc.title}</p>
@@ -522,32 +525,32 @@ export function RequestDetailsPage() {
           {activeTab === 'camunda_forms' && (
             <div className="space-y-5">
               {/* Info banner */}
-              <div className="flex items-start gap-3 rounded-xl border border-blue-200 bg-blue-50 p-4">
-                <Layers className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+              <div className="flex items-start gap-3 rounded-[1.5rem] border border-primary/15 bg-secondary p-4">
+                <Layers className="mt-0.5 h-5 w-5 flex-shrink-0 text-primary-dark" />
                 <div>
-                  <p className="text-sm font-semibold text-blue-800">عرض توضيحي — نماذج Camunda الديناميكية</p>
-                  <p className="text-xs text-blue-600 mt-1 leading-relaxed">
+                  <p className="text-sm font-semibold text-primary-icon">عرض توضيحي — نماذج Camunda الديناميكية</p>
+                  <p className="mt-1 text-xs leading-relaxed text-primary-dark">
                     يوجد أسلوبان لعرض نماذج Camunda في النظام. استخدم المفتاح أدناه للتبديل بينهما:
                   </p>
-                  <ul className="text-xs text-blue-700 mt-2 space-y-1 list-disc list-inside">
+                  <ul className="mt-2 list-inside list-disc space-y-1 text-xs text-primary-dark">
                     <li><strong>المعالج المخصص (CamundaFormRenderer)</strong> — مبني بـ React + React Hook Form، يدعم RTL بالكامل مع تحكم كامل بالتصميم.</li>
-                    <li><strong>العارض الرسمي (OfficialCamundaFormViewer)</strong> — يستخدم مكتبة <code className="bg-blue-100 px-1 rounded">@bpmn-io/form-js</code> الرسمية من Camunda مباشرة.</li>
+                    <li><strong>العارض الرسمي (OfficialCamundaFormViewer)</strong> — يستخدم مكتبة <code className="rounded bg-primary-soft px-1 text-primary-icon">@bpmn-io/form-js</code> الرسمية من Camunda مباشرة.</li>
                   </ul>
                 </div>
               </div>
 
               {/* Toggle Switch */}
-              <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
+              <div className="surface-card p-4">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-semibold text-foreground">طريقة العرض:</span>
-                  <div className="flex rounded-lg border border-border overflow-hidden">
+                  <div className="flex overflow-hidden rounded-2xl border border-border">
                     <button
                       onClick={() => setCamundaFormType('custom')}
                       className={cn(
                         'px-4 py-2 text-xs font-semibold transition-all',
                         camundaFormType === 'custom'
                           ? 'bg-primary text-white'
-                          : 'bg-muted/30 text-muted-foreground hover:text-foreground'
+                          : 'bg-card text-muted-foreground hover:bg-sidebar-active hover:text-foreground'
                       )}
                     >
                       المعالج المخصص (React)
@@ -558,7 +561,7 @@ export function RequestDetailsPage() {
                         'px-4 py-2 text-xs font-semibold transition-all',
                         camundaFormType === 'official'
                           ? 'bg-primary text-white'
-                          : 'bg-muted/30 text-muted-foreground hover:text-foreground'
+                          : 'bg-card text-muted-foreground hover:bg-sidebar-active hover:text-foreground'
                       )}
                     >
                       العارض الرسمي (@bpmn-io/form-js)
@@ -582,13 +585,13 @@ export function RequestDetailsPage() {
               )}
 
               {/* Schema preview */}
-              <details className="rounded-xl border border-border bg-card shadow-sm">
-                <summary className="cursor-pointer px-5 py-3 text-sm font-semibold text-foreground hover:bg-muted/30 transition-colors rounded-xl">
+              <details className="surface-card overflow-hidden">
+                <summary className="cursor-pointer px-5 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-sidebar-active">
                   عرض مخطط النموذج (JSON Schema)
                 </summary>
                 <pre
                   dir="ltr"
-                  className="p-5 text-xs font-mono text-muted-foreground overflow-x-auto border-t border-border bg-muted/20 rounded-b-xl max-h-[400px]"
+                  className="max-h-[400px] overflow-x-auto border-t border-border bg-muted/20 p-5 font-mono text-xs text-muted-foreground"
                 >
                   {JSON.stringify(DEMO_CAMUNDA_SCHEMA, null, 2)}
                 </pre>
@@ -600,7 +603,7 @@ export function RequestDetailsPage() {
         {/* Action Sidebar */}
         <div className="space-y-4">
           {/* Status Card */}
-          <div className="rounded-xl border border-border bg-card p-5 shadow-sm space-y-3">
+          <div className={`${SECTION_CARD_CLASS} space-y-3`}>
             <h3 className="text-sm font-semibold text-foreground">معلومات الطلب</h3>
             <div className="space-y-2">
               {[
@@ -620,7 +623,7 @@ export function RequestDetailsPage() {
 
           {/* Actions Card */}
           {allowedTransitions.length > 0 && !isAdminDirector && (
-            <div className="rounded-xl border border-border bg-card p-5 shadow-sm space-y-3">
+            <div className={`${SECTION_CARD_CLASS} space-y-3`}>
               <h3 className="text-sm font-semibold text-foreground">الإجراءات المتاحة</h3>
               <p className="text-xs text-muted-foreground">
                 بصفتك <strong>{currentUser ? ROLE_LABELS[currentUser.role] : ''}</strong>، يمكنك تنفيذ:
@@ -628,12 +631,12 @@ export function RequestDetailsPage() {
               <div className="space-y-2">
                 {allowedTransitions.map((transition) => {
                   const Icon = ACTION_ICONS[transition.action] ?? ChevronLeft;
-                  const style = ACTION_STYLES[transition.action] ?? 'bg-primary hover:bg-primary/90 text-white';
+                  const style = ACTION_STYLES[transition.action] ?? 'bg-primary text-white hover:bg-primary-dark';
                   return (
                     <button
                       key={transition.action}
                       onClick={() => { setConfirmAction(transition.action); setActionNotes(''); }}
-                      className={cn('flex w-full items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all shadow-sm', style)}
+                      className={cn('flex w-full items-center gap-2 rounded-2xl px-4 py-3 text-sm font-medium transition-all shadow-[var(--shadow-soft)]', style)}
                     >
                       <Icon className="h-4 w-4 flex-shrink-0" />
                       {transition.actionLabel}
@@ -646,7 +649,7 @@ export function RequestDetailsPage() {
 
           {/* No actions */}
           {allowedTransitions.length === 0 && currentUser && !isAdminDirector && (
-            <div className="rounded-xl border border-border bg-muted/30 p-5 text-center">
+            <div className="rounded-[1.5rem] border border-border/70 bg-card p-5 text-center shadow-[var(--shadow-soft)]">
               <p className="text-xs text-muted-foreground">
                 لا توجد إجراءات متاحة لك في هذه المرحلة بصفتك {ROLE_LABELS[currentUser.role]}
               </p>
@@ -668,7 +671,7 @@ export function RequestDetailsPage() {
           variant={
             confirmAction.includes('reject') ? 'danger'
               : confirmAction.includes('return') ? 'warning'
-              : 'primary'
+                : 'primary'
           }
         >
           {/* Route to maintenance officer */}
@@ -678,7 +681,7 @@ export function RequestDetailsPage() {
               <select
                 value={officerName}
                 onChange={(e) => setOfficerName(e.target.value)}
-                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                className={SURFACE_INPUT_CLASS}
               >
                 {allMaintenanceOfficers.map((u) => <option key={u.id} value={u.name}>{u.name}</option>)}
               </select>
@@ -692,7 +695,7 @@ export function RequestDetailsPage() {
               <select
                 value={specializedOfficerName}
                 onChange={(e) => setSpecializedOfficerName(e.target.value)}
-                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                className={SURFACE_INPUT_CLASS}
               >
                 {specializedOfficerOptions.map((u) => <option key={u.id} value={u.name}>{u.name}</option>)}
               </select>
@@ -711,7 +714,7 @@ export function RequestDetailsPage() {
                     const type = e.target.value as typeof selectedOutcome.outcomeType;
                     setSelectedOutcome({ outcomeType: type, outcomeLabel: OUTCOME_TYPE_LABELS[type] });
                   }}
-                  className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  className={SURFACE_INPUT_CLASS}
                 >
                   {Object.entries(OUTCOME_TYPE_LABELS).map(([key, label]) => (
                     <option key={key} value={key}>{label}</option>
@@ -723,7 +726,7 @@ export function RequestDetailsPage() {
                   <label className="block text-xs font-medium text-foreground">موعد الصيانة</label>
                   <input
                     type="date"
-                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                    className={SURFACE_INPUT_CLASS}
                     onChange={(e) => setSelectedOutcome(prev => ({ ...prev, scheduledDate: e.target.value }))}
                   />
                 </div>
@@ -734,7 +737,7 @@ export function RequestDetailsPage() {
                   <input
                     type="text"
                     placeholder="مثال: مضخة وقود، فلتر زيت"
-                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                    className={SURFACE_INPUT_CLASS}
                     onChange={(e) => setSelectedOutcome(prev => ({ ...prev, supplyItemsRequested: e.target.value.split('،').map(s => s.trim()).filter(Boolean) }))}
                   />
                 </div>
@@ -751,7 +754,7 @@ export function RequestDetailsPage() {
               onChange={(e) => setActionNotes(e.target.value)}
               placeholder="أضف ملاحظاتك هنا..."
               rows={3}
-              className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              className={SURFACE_INPUT_CLASS}
             />
           </div>
         </ConfirmationModal>

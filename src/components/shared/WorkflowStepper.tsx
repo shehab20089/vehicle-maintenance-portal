@@ -28,8 +28,8 @@ export function WorkflowStepper({ currentStatus, className }: WorkflowStepperPro
                 <div
                   className={cn(
                     'flex h-8 w-8 items-center justify-center rounded-full border-2 text-xs font-semibold transition-all',
-                    isDone && 'border-emerald-500 bg-emerald-500 text-white',
-                    isCurrent && !isCurrentRejected && 'border-primary bg-primary text-white shadow-md shadow-primary/30',
+                    isDone && 'border-primary bg-primary text-white',
+                    isCurrent && !isCurrentRejected && 'border-primary bg-primary text-white shadow-[var(--shadow-float)]',
                     isCurrentRejected && 'border-red-500 bg-red-500 text-white',
                     !isDone && !isCurrent && 'border-border bg-card text-muted-foreground'
                   )}
@@ -47,7 +47,7 @@ export function WorkflowStepper({ currentStatus, className }: WorkflowStepperPro
                 <span
                   className={cn(
                     'text-[10px] whitespace-nowrap font-medium max-w-[72px] text-center leading-tight',
-                    isDone && 'text-emerald-600',
+                    isDone && 'text-primary-dark',
                     isCurrent && !isCurrentRejected && 'text-primary',
                     isCurrentRejected && 'text-red-600',
                     !isDone && !isCurrent && 'text-muted-foreground'
@@ -60,7 +60,7 @@ export function WorkflowStepper({ currentStatus, className }: WorkflowStepperPro
                 <div
                   className={cn(
                     'mx-1.5 h-0.5 w-10 flex-shrink-0',
-                    idx < currentIdx ? 'bg-emerald-400' : 'bg-border'
+                    idx < currentIdx ? 'bg-primary/60' : 'bg-border'
                   )}
                 />
               )}

@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/authStore';
 import { UserRole } from '@/types';
 import {
-  LayoutDashboard, Plus, ClipboardList, Bell, FileText, LogOut, Car, ChevronRight
+  LayoutDashboard, Plus, ClipboardList, Bell, LogOut, Car, ChevronRight
 } from 'lucide-react';
 
 interface NavItem {
@@ -43,8 +43,8 @@ export function Sidebar({ collapsed }: SidebarProps) {
         'flex items-center gap-3 border-b border-sidebar-border',
         collapsed ? 'justify-center px-3 py-4' : 'px-5 py-4'
       )}>
-        <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-primary shadow-sm shadow-primary/30">
-          <Car className="h-5 w-5 text-white" />
+        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-primary-soft">
+          <Car className="h-5 w-5 text-primary-icon" />
         </div>
         {!collapsed && (
           <div className="min-w-0">
@@ -55,7 +55,7 @@ export function Sidebar({ collapsed }: SidebarProps) {
       </div>
 
       {/* Nav Links */}
-      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
+      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-2">
         {visibleItems.map((item) => (
           <NavLink
             key={item.href}
@@ -63,17 +63,17 @@ export function Sidebar({ collapsed }: SidebarProps) {
             end={item.href === '/dashboard'}
             className={({ isActive }) =>
               cn(
-                'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all',
+                'flex items-center gap-3 rounded-2xl border px-3 py-3 text-sm font-semibold transition-all',
                 collapsed && 'justify-center',
                 isActive
-                  ? 'bg-primary text-white shadow-sm shadow-primary/20'
-                  : 'text-sidebar-foreground hover:bg-sidebar-active hover:text-foreground'
+                  ? 'border-primary/35 bg-primary-soft text-primary-dark'
+                  : 'border-transparent text-sidebar-foreground hover:border-primary/20 hover:bg-sidebar-active hover:text-foreground'
               )
             }
           >
             {({ isActive }) => (
               <>
-                <item.icon className={cn('h-4.5 w-4.5 flex-shrink-0', isActive ? 'text-white' : 'text-muted-foreground')} />
+                <item.icon className={cn('h-4.5 w-4.5 flex-shrink-0', isActive ? 'text-primary-dark' : 'text-muted-foreground')} />
                 {!collapsed && <span className="flex-1 truncate">{item.label}</span>}
                 {!collapsed && isActive && <ChevronRight className="h-3.5 w-3.5 opacity-60" />}
               </>
@@ -97,7 +97,7 @@ export function Sidebar({ collapsed }: SidebarProps) {
           <button
             onClick={logout}
             className={cn(
-              'flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-red-50 hover:text-red-600 transition-colors',
+              'flex items-center gap-2 rounded-2xl px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-red-50 hover:text-red-600 transition-colors',
               collapsed ? 'w-10 justify-center' : 'w-full'
             )}
           >

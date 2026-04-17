@@ -3,23 +3,23 @@ import { type RequestStatus } from '@/types';
 import { STATUS_LABELS, STATUS_COLOR_MAP } from '@/utils/arabicLabels';
 
 const colorClasses = {
-  pending: 'bg-amber-50 text-amber-700 border border-amber-200',
-  approved: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
-  returned: 'bg-orange-50 text-orange-700 border border-orange-200',
-  rejected: 'bg-red-50 text-red-700 border border-red-200',
-  inprogress: 'bg-blue-50 text-blue-700 border border-blue-200',
-  completed: 'bg-green-50 text-green-700 border border-green-200',
-  notified: 'bg-purple-50 text-purple-700 border border-purple-200',
+  pending: 'bg-status-pending-bg text-status-pending border border-status-pending/20',
+  approved: 'bg-status-approved-bg text-status-approved border border-status-approved/20',
+  returned: 'bg-status-returned-bg text-status-returned border border-status-returned/20',
+  rejected: 'bg-status-rejected-bg text-status-rejected border border-status-rejected/20',
+  inprogress: 'bg-status-inprogress-bg text-status-inprogress border border-status-inprogress/20',
+  completed: 'bg-status-completed-bg text-status-completed border border-status-completed/20',
+  notified: 'bg-primary-soft text-primary-dark border border-primary/20',
 };
 
 const dotColors = {
-  pending: 'bg-amber-400',
-  approved: 'bg-emerald-400',
-  returned: 'bg-orange-400',
-  rejected: 'bg-red-400',
-  inprogress: 'bg-blue-400',
-  completed: 'bg-green-500',
-  notified: 'bg-purple-400',
+  pending: 'bg-status-pending',
+  approved: 'bg-status-approved',
+  returned: 'bg-status-returned',
+  rejected: 'bg-status-rejected',
+  inprogress: 'bg-status-inprogress',
+  completed: 'bg-status-completed',
+  notified: 'bg-primary',
 };
 
 interface StatusBadgeProps {
@@ -34,8 +34,8 @@ export function StatusBadge({ status, showDot = true, className, size = 'md' }: 
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-full font-medium',
-        size === 'sm' ? 'px-2 py-0.5 text-xs' : 'px-3 py-1 text-xs',
+        'inline-flex items-center gap-1.5 rounded-full font-semibold',
+        size === 'sm' ? 'px-2.5 py-1 text-[11px]' : 'px-3 py-1.5 text-xs',
         colorClasses[colorType],
         className
       )}

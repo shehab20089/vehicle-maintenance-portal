@@ -10,19 +10,19 @@ const priorityStyles = {
     iconColor: 'text-red-500',
   },
   high: {
-    badge: 'bg-orange-50 text-orange-700 border border-orange-200',
+    badge: 'bg-status-returned-bg text-status-returned border border-status-returned/20',
     icon: AlertTriangle,
-    iconColor: 'text-orange-500',
+    iconColor: 'text-status-returned',
   },
   medium: {
-    badge: 'bg-yellow-50 text-yellow-700 border border-yellow-200',
+    badge: 'bg-status-pending-bg text-status-pending border border-status-pending/20',
     icon: ArrowUp,
-    iconColor: 'text-yellow-500',
+    iconColor: 'text-status-pending',
   },
   low: {
-    badge: 'bg-gray-50 text-gray-600 border border-gray-200',
+    badge: 'bg-primary-soft text-primary-dark border border-primary/20',
     icon: Minus,
-    iconColor: 'text-gray-400',
+    iconColor: 'text-primary-dark',
   },
 };
 
@@ -38,8 +38,8 @@ export function PriorityBadge({ priority, showIcon = true, className, size = 'md
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1 rounded-full font-medium',
-        size === 'sm' ? 'px-2 py-0.5 text-xs' : 'px-2.5 py-1 text-xs',
+        'inline-flex items-center gap-1 rounded-full font-semibold',
+        size === 'sm' ? 'px-2.5 py-1 text-[11px]' : 'px-2.5 py-1.5 text-xs',
         badge,
         className
       )}
