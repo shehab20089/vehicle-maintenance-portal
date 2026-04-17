@@ -7,6 +7,7 @@ export interface CamundaFormSchema {
   };
   schemaVersion: number;
   id: string;
+  type?: string;
   components: CamundaFormComponent[];
 }
 

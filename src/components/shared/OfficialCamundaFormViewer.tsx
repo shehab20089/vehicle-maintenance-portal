@@ -31,6 +31,7 @@ export function OfficialCamundaFormViewer({
     });
 
     formInstanceRef.current = form;
+console.log(schema);
 
     console.log(initialData);
     

@@ -1,7 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState ,useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useRequestStore } from '@/store/requestStore';
 import { useAuthStore } from '@/store/authStore';
+import { OfficialCamundaFormViewer } from '@/components/shared/OfficialCamundaFormViewer';
+import { CamundaFormRenderer } from '@/components/shared/CamundaFormRenderer';
+import type { CamundaFormSchema } from '@/types/camunda';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { PriorityBadge } from '@/components/shared/PriorityBadge';
 import { Timeline } from '@/components/shared/Timeline';
@@ -19,6 +22,9 @@ import {
   Car, User, Wrench, FileText, MessageSquare, Send, CheckCircle,
   RotateCcw, AlertCircle, Paperclip,
   Bell, Star, Package, Calendar,
+  Car, User, Wrench, FileText, MessageSquare, Send, CheckCircle, XCircle,
+  RotateCcw, Play, Flag, ArrowRightLeft, AlertCircle, Paperclip, ChevronLeft,
+  Bell, Star, Package, Calendar, Layers,
 } from 'lucide-react';
 import { CamundaFormRenderer } from '@/components/shared/CamundaFormRenderer';
 
@@ -179,7 +185,83 @@ function buildWorkflowDefaultValues(request: MaintenanceRequest, formId?: string
   return values;
 }
 
-type ActiveTab = 'details' | 'timeline' | 'comments' | 'documents';
+// ─── Actual Camunda Form Schema (from Camunda workflow) ────────────────────
+const DEMO_CAMUNDA_SCHEMA: CamundaFormSchema = {
+  executionPlatform: 'Camunda Cloud',
+  executionPlatformVersion: '8.7.0',
+  exporter: { name: 'Camunda Web Modeler', version: 'a0293e6' },
+  schemaVersion: 18,
+  id: 'Form_0nog1ps',
+  components: [
+    {
+      id: 'Field_0aawab9',
+      key: 'textarea_dm5l4',
+      type: 'textarea',
+      label: 'Reason',
+      layout: { row: 'Row_06nmr5f', columns: null },
+      validate: { required: true, minLength: '20', maxLength: '500' },
+      properties: { labelEn: 'Reason', labelAr: 'السبب' },
+    },
+    {
+      id: 'Field_0ui9ubd',
+      key: 'filepicker_szirtj',
+      type: 'filepicker',
+      label: 'Upload File',
+      layout: { row: 'Row_1ovdgab', columns: null },
+      validate: { required: true },
+      properties: { labelEn: 'Upload Document', labelAr: 'تحميل المستند' },
+    },
+  ],
+  type:'default'
+};
+
+const ACTION_ICONS: Record<string, React.ElementType> = {
+  transport_approve: CheckCircle,
+  transport_reject: XCircle,
+  transport_return: RotateCcw,
+  supply_approve: CheckCircle,
+  supply_reject: XCircle,
+  route_to_maintenance: ArrowRightLeft,
+  maintenance_director_reject: XCircle,
+  start_execution: Play,
+  maintenance_reject: XCircle,
+  maintenance_return: RotateCcw,
+  route_to_specialized: ArrowRightLeft,
+  specialized_execute: Play,
+  specialized_reject: XCircle,
+  specialized_return: RotateCcw,
+  complete_execution: Flag,
+  final_approve: Star,
+  final_return: RotateCcw,
+  submit: Send,
+  resubmit: Send,
+  close: CheckCircle,
+};
+
+const ACTION_STYLES: Record<string, string> = {
+  transport_approve: 'bg-emerald-600 hover:bg-emerald-700 text-white',
+  supply_approve: 'bg-emerald-600 hover:bg-emerald-700 text-white',
+  route_to_maintenance: 'bg-blue-600 hover:bg-blue-700 text-white',
+  start_execution: 'bg-indigo-600 hover:bg-indigo-700 text-white',
+  specialized_execute: 'bg-indigo-600 hover:bg-indigo-700 text-white',
+  route_to_specialized: 'bg-violet-600 hover:bg-violet-700 text-white',
+  complete_execution: 'bg-teal-600 hover:bg-teal-700 text-white',
+  final_approve: 'bg-amber-600 hover:bg-amber-700 text-white',
+  submit: 'bg-primary hover:bg-primary/90 text-white',
+  resubmit: 'bg-primary hover:bg-primary/90 text-white',
+  close: 'bg-slate-600 hover:bg-slate-700 text-white',
+  transport_return: 'bg-orange-500 hover:bg-orange-600 text-white',
+  maintenance_return: 'bg-orange-500 hover:bg-orange-600 text-white',
+  specialized_return: 'bg-orange-500 hover:bg-orange-600 text-white',
+  final_return: 'bg-orange-500 hover:bg-orange-600 text-white',
+  transport_reject: 'bg-red-600 hover:bg-red-700 text-white',
+  supply_reject: 'bg-red-600 hover:bg-red-700 text-white',
+  maintenance_director_reject: 'bg-red-600 hover:bg-red-700 text-white',
+  maintenance_reject: 'bg-red-600 hover:bg-red-700 text-white',
+  specialized_reject: 'bg-red-600 hover:bg-red-700 text-white',
+};
+
+type ActiveTab = 'details' | 'timeline' | 'comments' | 'documents' | 'camunda_forms';
 
 export function RequestDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -203,6 +285,8 @@ export function RequestDetailsPage() {
   const [isWorkflowLoading, setIsWorkflowLoading] = useState(false);
   const [isWorkflowSubmitting, setIsWorkflowSubmitting] = useState(false);
   const [completionModal, setCompletionModal] = useState<{ title: string; description: string } | null>(null);
+  const [camundaFormType, setCamundaFormType] = useState<'official' | 'custom'>('custom');
+  // Final outcome selection
   const [selectedOutcome, setSelectedOutcome] = useState<MaintenanceOutcome>({
     outcomeType: OutcomeType.MAINTENANCE_COMPLETED,
     outcomeLabel: OUTCOME_TYPE_LABELS[OutcomeType.MAINTENANCE_COMPLETED],
@@ -456,11 +540,18 @@ export function RequestDetailsPage() {
     navigate('/dashboard', { replace: true });
   };
 
+  // Camunda form submit handler (demo)
+  const handleCamundaFormSubmit = useCallback((data: any) => {
+    console.log('✅ Camunda Form Submitted:', data);
+    alert('تم إرسال النموذج بنجاح!\n\n' + JSON.stringify(data, null, 2));
+  }, []);
+
   const TABS: { id: ActiveTab; label: string; icon: React.ElementType; count?: number }[] = [
     { id: 'details', label: 'التفاصيل', icon: FileText },
     { id: 'timeline', label: 'سجل النشاط', icon: Wrench, count: request.timeline.length },
     { id: 'comments', label: 'التعليقات', icon: MessageSquare, count: request.comments.length },
     { id: 'documents', label: 'المستندات', icon: Paperclip, count: request.finalDocuments.length },
+    { id: 'camunda_forms', label: 'نماذج Camunda', icon: Layers },
   ];
 
   return (
@@ -943,6 +1034,84 @@ export function RequestDetailsPage() {
                   ))}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Camunda Forms Demo Tab */}
+          {activeTab === 'camunda_forms' && (
+            <div className="space-y-5">
+              {/* Info banner */}
+              <div className="flex items-start gap-3 rounded-xl border border-blue-200 bg-blue-50 p-4">
+                <Layers className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-sm font-semibold text-blue-800">عرض توضيحي — نماذج Camunda الديناميكية</p>
+                  <p className="text-xs text-blue-600 mt-1 leading-relaxed">
+                    يوجد أسلوبان لعرض نماذج Camunda في النظام. استخدم المفتاح أدناه للتبديل بينهما:
+                  </p>
+                  <ul className="text-xs text-blue-700 mt-2 space-y-1 list-disc list-inside">
+                    <li><strong>المعالج المخصص (CamundaFormRenderer)</strong> — مبني بـ React + React Hook Form، يدعم RTL بالكامل مع تحكم كامل بالتصميم.</li>
+                    <li><strong>العارض الرسمي (OfficialCamundaFormViewer)</strong> — يستخدم مكتبة <code className="bg-blue-100 px-1 rounded">@bpmn-io/form-js</code> الرسمية من Camunda مباشرة.</li>
+                  </ul>
+                </div>
+              </div>
+
+              {/* Toggle Switch */}
+              <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-semibold text-foreground">طريقة العرض:</span>
+                  <div className="flex rounded-lg border border-border overflow-hidden">
+                    <button
+                      onClick={() => setCamundaFormType('custom')}
+                      className={cn(
+                        'px-4 py-2 text-xs font-semibold transition-all',
+                        camundaFormType === 'custom'
+                          ? 'bg-primary text-white'
+                          : 'bg-muted/30 text-muted-foreground hover:text-foreground'
+                      )}
+                    >
+                      المعالج المخصص (React)
+                    </button>
+                    <button
+                      onClick={() => setCamundaFormType('official')}
+                      className={cn(
+                        'px-4 py-2 text-xs font-semibold transition-all',
+                        camundaFormType === 'official'
+                          ? 'bg-primary text-white'
+                          : 'bg-muted/30 text-muted-foreground hover:text-foreground'
+                      )}
+                    >
+                      العارض الرسمي (@bpmn-io/form-js)
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Render the selected form type */}
+              {camundaFormType === 'custom' ? (
+                <CamundaFormRenderer
+                  schema={DEMO_CAMUNDA_SCHEMA}
+                  onSubmit={handleCamundaFormSubmit}
+                  isSubmitting={false}
+                />
+              ) : (
+                <OfficialCamundaFormViewer
+                  schema={DEMO_CAMUNDA_SCHEMA}
+                  onSubmit={handleCamundaFormSubmit}
+                />
+              )}
+
+              {/* Schema preview */}
+              <details className="rounded-xl border border-border bg-card shadow-sm">
+                <summary className="cursor-pointer px-5 py-3 text-sm font-semibold text-foreground hover:bg-muted/30 transition-colors rounded-xl">
+                  عرض مخطط النموذج (JSON Schema)
+                </summary>
+                <pre
+                  dir="ltr"
+                  className="p-5 text-xs font-mono text-muted-foreground overflow-x-auto border-t border-border bg-muted/20 rounded-b-xl max-h-[400px]"
+                >
+                  {JSON.stringify(DEMO_CAMUNDA_SCHEMA, null, 2)}
+                </pre>
+              </details>
             </div>
           )}
         </div>
